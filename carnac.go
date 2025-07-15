@@ -102,7 +102,7 @@ func getJokeById(id int64) (Jokes, error) {
 }
 
 func addInsult(ins Insults) (int64, error) {
-	result, err := db.Exec("INSERT INTO Carnac (insult) values (?)", ins.Insult)
+	result, err := db.Exec("INSERT INTO Insults (insult) values (?)", ins.Insult)
 	if err != nil {
 		return 0, err
 	}
