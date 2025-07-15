@@ -17,6 +17,8 @@ type Insults struct {
 var db *sql.DB
 
 func main() {
+
+	// Connecting to the sql database
 	cfg := mysql.NewConfig()
 	cfg.User = os.Getenv("DBUSER")
 	cfg.Passwd = os.Getenv("DBPASS")
@@ -43,6 +45,7 @@ func main() {
 	fmt.Printf("Insult: %v\n", insults)
 }
 
+// getInsults returns the insults from an sql database
 func getInsults(db *sql.DB) ([]Insults, error) {
 	var insults []Insults
 
