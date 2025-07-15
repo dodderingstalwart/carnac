@@ -1,5 +1,4 @@
-CREATE DATABASE carnac;
-USE carnac;
+DROP TABLE IF EXISTS Insults; 
 CREATE TABLE Insults (ID int NOT NULL AUTO_INCREMENTS, 
                       Insult varchar(255) NOT NULL,
                       PRIMARY KEY (ID) 
