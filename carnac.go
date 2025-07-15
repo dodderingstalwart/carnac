@@ -34,30 +34,33 @@ func main() {
 	if pingErr != nil {
 		log.Fatal(pingErr)
 	}
-	fmt.Println("Connected")
+	fmt.Println("Connected!")
 
-	insults, err := getInsults("May a near-sighted sand flea suck syrup off your short stack")
+	insults, err := getInsults(db)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Found: %v\n", insults)
+	fmt.Printf("Insult: %v\n", insults)
 }
 
-func getInsults(joke string) ([]Insults, error) {
+func getInsults(db *sql.DB) ([]Insults, error) {
 	var insults []Insults
 
-	rows, err := db.Query("SELECT * FROM Insults", joke)
+	rows, err := db.Query("SELECT * FROM Insults")
 	if err != nil {
-		return nil, fmt.Errorf("Insult %q: %v", joke, err)
+		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var ins Insults
 		if err := rows.Scan(&ins.ID, &ins.Insult); err != nil {
-			return nil, fmt.Errorf("Insult %q: %v", joke, err)
+			return nil, err
 		}
 		insults = append(insults, ins)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return insults, nil
 }
