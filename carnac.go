@@ -112,3 +112,15 @@ func addInsult(ins Insults) (int64, error) {
 	}
 	return id, nil
 }
+
+func addJoke(jok Jokes) (int64, error) {
+	result, err := db.Exec("INSERT INTO Jokes (answer, question) values (?, ?)", jok.Answer, jok.Question)
+	if err != nil {
+		return 0, err
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, nil
+	}
+	return id, nil
+}
