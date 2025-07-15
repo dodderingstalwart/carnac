@@ -14,6 +14,12 @@ type Insults struct {
 	Insult string
 }
 
+type Jokes struct {
+	ID       int64
+	Answer   string
+	Question string
+}
+
 var db *sql.DB
 
 func main() {
@@ -43,6 +49,20 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("Insult: %v\n", insults)
+
+	joke, err := getJokeById(1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Joke: %v\n", joke)
+
+	insultID, err := addInsult(Insults{
+		Insult: "May a weird city council man rezone your sister as a business district",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("ID of added insult: %v\n", insultID)
 }
 
 // getInsults returns the insults from an sql database
@@ -66,4 +86,29 @@ func getInsults(db *sql.DB) ([]Insults, error) {
 		return nil, err
 	}
 	return insults, nil
+}
+
+func getJokeById(id int64) (Jokes, error) {
+	var jok Jokes
+
+	row := db.QueryRow("SELECT * FROM Jokes WHERE id = ?", id)
+	if err := row.Scan(&jok.ID, &jok.Answer, &jok.Question); err != nil {
+		if err == sql.ErrNoRows {
+			return jok, err
+		}
+		return jok, err
+	}
+	return jok, nil
+}
+
+func addInsult(ins Insults) (int64, error) {
+	result, err := db.Exec("INSERT INTO Carnac (insult) values (?)", ins.Insult)
+	if err != nil {
+		return 0, err
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, nil
+	}
+	return id, nil
 }
