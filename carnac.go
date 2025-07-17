@@ -88,6 +88,7 @@ func getInsults(db *sql.DB) ([]Insults, error) {
 	return insults, nil
 }
 
+// getJokeById returns a joke from an sql database by its id
 func getJokeById(id int64) (Jokes, error) {
 	var jok Jokes
 
