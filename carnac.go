@@ -56,13 +56,13 @@ func main() {
 	}
 	fmt.Printf("Joke: %v\n", joke)
 
-	insultID, err := addInsult(Insults{
+	/*insultID, err := addInsult(Insults{
 		Insult: "May a weird city council man rezone your sister as a business district",
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("ID of added insult: %v\n", insultID)
+	fmt.Printf("ID of added insult: %v\n", insultID)*/
 }
 
 // getInsults returns the insults from an sql database
@@ -101,7 +101,7 @@ func getJokeById(id int64) (Jokes, error) {
 	return jok, nil
 }
 
-func addInsult(ins Insults) (int64, error) {
+/*func addInsult(ins Insults) (int64, error) {
 	result, err := db.Exec("INSERT INTO Insults (insult) values (?)", ins.Insult)
 	if err != nil {
 		return 0, err
@@ -111,9 +111,9 @@ func addInsult(ins Insults) (int64, error) {
 		return 0, nil
 	}
 	return id, nil
-}
+}*/
 
-func addJoke(jok Jokes) (int64, error) {
+/*func addJoke(jok Jokes) (int64, error) {
 	result, err := db.Exec("INSERT INTO Jokes (answer, question) values (?, ?)", jok.Answer, jok.Question)
 	if err != nil {
 		return 0, err
@@ -123,4 +123,4 @@ func addJoke(jok Jokes) (int64, error) {
 		return 0, nil
 	}
 	return id, nil
-}
+}*/
