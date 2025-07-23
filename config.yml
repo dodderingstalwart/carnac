@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: carnac
-          image: your-dockerhub-username/carnac:latest
+          image: doddering-stallwart/carnac:latest
           ports:
             - containerPort: 80
 ---
