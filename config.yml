@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: carnac
-          image: doddering-stallwart/carnac:latest
+          image: carllafong/carnac:latest
           ports:
             - containerPort: 80
 ---
