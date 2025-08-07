@@ -50,6 +50,12 @@ func main() {
 	}
 	fmt.Printf("Insult: %v\n", insults)
 
+	jokes, err := getJokes(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Jokes: %v\n", jokes)
+
 	var id int64
 	fmt.Print("Enter the ID of the joke:")
 	fmt.Scanln(&id)
@@ -89,6 +95,28 @@ func getInsults(db *sql.DB) ([]Insults, error) {
 		return nil, err
 	}
 	return insults, nil
+}
+
+func getJokes(db *sql.DB) ([]Jokes, error) {
+	var jokes []Jokes
+
+	rows, err := db.Query("SELECT * FROM Jokes")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var jok Jokes
+		if err := rows.Scan(&jok.ID, &jok.Answer, &jok.Question); err != nil {
+			return nil, err
+		}
+		jokes = append(jokes, jok)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return jokes, nil
 }
 
 // getJokeById returns a joke from an sql database by its id
