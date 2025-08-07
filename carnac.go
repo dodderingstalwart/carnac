@@ -66,7 +66,7 @@ func main() {
 	fmt.Printf("Joke: %v\n", joke)
 
 	/*insultID, err := addInsult(Insults{
-		Insult: "May a weird city council man rezone your sister as a business district",
+		Insult: "Insult added ",
 	})
 	if err != nil {
 		log.Fatal(err)
