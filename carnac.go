@@ -50,7 +50,10 @@ func main() {
 	}
 	fmt.Printf("Insult: %v\n", insults)
 
-	joke, err := getJokeById(1)
+	var id int64
+	fmt.Print("Enter the ID of the joke:")
+	fmt.Scanln(&id)
+	joke, err := getJokeById(id)
 	if err != nil {
 		log.Fatal(err)
 	}
