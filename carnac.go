@@ -66,6 +66,24 @@ func main() {
 	}
 	fmt.Printf("Joke: %v\n", joke)
 
+	var insultID int64
+	fmt.Print("Enter the ID of the insult:")
+	fmt.Scanln(&insultID)
+	insult, err := getInsultsById(insultID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Insult: %v\n", insult)
+
+	/*jokeID, err := addJoke(Jokes{
+		Answer:   "Answer added ",
+		Question: "Question added ",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("ID of added joke: %v\n", jokeID)*/
+
 	/*insultID, err := addInsult(Insults{
 		Insult: "Insult added ",
 	})
@@ -96,6 +114,19 @@ func getInsults(db *sql.DB) ([]Insults, error) {
 		return nil, err
 	}
 	return insults, nil
+}
+
+func getInsultsById(id int64) (Insults, error) {
+	var ins Insults
+
+	row := db.QueryRow("SELECT * FROM Insults WHERE id = ?", id)
+	if err := row.Scan(&ins.ID, &ins.Insult); err != nil {
+		if err == sql.ErrNoRows {
+			return ins, err
+		}
+		return ins, err
+	}
+	return ins, nil
 }
 
 // getJokes returns the jokes from an sql database
