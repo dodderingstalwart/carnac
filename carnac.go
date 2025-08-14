@@ -38,6 +38,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Test the connection to the database and output Connected! if successful
 	pingErr := db.Ping()
 	if pingErr != nil {
 		log.Fatal(pingErr)
@@ -97,6 +98,7 @@ func getInsults(db *sql.DB) ([]Insults, error) {
 	return insults, nil
 }
 
+// getJokes returns the jokes from an sql database
 func getJokes(db *sql.DB) ([]Jokes, error) {
 	var jokes []Jokes
 
