@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS Insults; 
 CREATE TABLE Insults (ID int NOT NULL AUTO_INCREMENTS, 
-                      Insult varchar(255) NOT NULL,
+                      Insult varchar(255) NOT NULL DISTINCT,
                       PRIMARY KEY (ID) 
 );
 CREATE TABLE Jokes (ID int NOT NULL AUTO_INCREMENTS,
