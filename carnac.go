@@ -166,6 +166,7 @@ func getJokeById(id int64) (Jokes, error) {
 	return jok, nil
 }
 
+// addInsult adds an insult to the sql database
 func addInsult(ins Insults) (int64, error) {
 	result, err := db.Exec("INSERT INTO Insults (insult) values (?)", ins.Insult)
 	if err != nil {
