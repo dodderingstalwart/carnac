@@ -166,7 +166,7 @@ func getJokeById(id int64) (Jokes, error) {
 	return jok, nil
 }
 
-/*func addInsult(ins Insults) (int64, error) {
+func addInsult(ins Insults) (int64, error) {
 	result, err := db.Exec("INSERT INTO Insults (insult) values (?)", ins.Insult)
 	if err != nil {
 		return 0, err
@@ -176,7 +176,7 @@ func getJokeById(id int64) (Jokes, error) {
 		return 0, nil
 	}
 	return id, nil
-}*/
+}
 
 /*func addJoke(jok Jokes) (int64, error) {
 	result, err := db.Exec("INSERT INTO Jokes (answer, question) values (?, ?)", jok.Answer, jok.Question)
