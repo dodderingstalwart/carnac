@@ -75,14 +75,14 @@ func main() {
 	}
 	fmt.Printf("Insult: %v\n", insult)
 
-	/*jokeID, err := addJoke(Jokes{
+	jokeID, err := addJoke(Jokes{
 		Answer:   "Answer added ",
 		Question: "Question added ",
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("ID of added joke: %v\n", jokeID)*/
+	fmt.Printf("ID of added joke: %v\n", jokeID)
 
 	/*insultID, err := addInsult(Insults{
 		Insult: "Insult added ",
