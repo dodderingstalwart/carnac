@@ -75,6 +75,9 @@ func main() {
 	}
 	fmt.Printf("Insult: %v\n", insult)
 
+	fmt.Printf("Add new joke into database\n")
+	fmt.Printf("Start with answer followed by question\n")
+
 	jokeID, err := addJoke(Jokes{
 		Answer:   "Answer added ",
 		Question: "Question added ",
