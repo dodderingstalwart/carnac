@@ -127,6 +127,34 @@ func main() {
 	}
 }
 
+func initDB() error {
+	// Connecting to the sql database
+	cfg := mysql.NewConfig()
+	cfg.User = os.Getenv("DBUSER")
+	cfg.Passwd = os.Getenv("DBPASS")
+	// Check if DBUSER and DBPASS environment variables are set
+	if cfg.User == "" || cfg.Passwd == "" {
+		log.Fatal("Environment variables DBUSER and DBPASS must be set")
+	}
+
+	// Configure the database connection (adjust as needed)
+	cfg.Net = "tcp"
+	cfg.Addr = "127.0.0.1:3306"
+	cfg.DBName = "Carnac"
+
+	// Get a database handle
+	var err error
+	db, err = sql.Open("mysql", cfg.FormatDSN())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := db.Ping(); err != nil {
+		return err
+	}
+	return nil
+}
+
 // getInsults returns the insults from an sql database
 func getInsults(db *sql.DB) ([]Insults, error) {
 	var insults []Insults
