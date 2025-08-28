@@ -2,7 +2,7 @@ package main
 
 // Importing packages
 import (
-	"database/sql"
+	sql "database/sql"
 	"fmt"
 	"log"
 	"os"
