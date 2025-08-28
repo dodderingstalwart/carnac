@@ -2,10 +2,12 @@ package main
 
 // Importing packages
 import (
+	"bufio"
 	sql "database/sql"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/go-sql-driver/mysql"
 )
@@ -33,13 +35,16 @@ func main() {
 	cfg := mysql.NewConfig()
 	cfg.User = os.Getenv("DBUSER")
 	cfg.Passwd = os.Getenv("DBPASS")
+	// Check if DBUSER and DBPASS environment variables are set
 	if cfg.User == "" || cfg.Passwd == "" {
 		log.Fatal("Environment variables DBUSER and DBPASS must be set")
 	}
+
 	cfg.Net = "tcp"
 	cfg.Addr = "127.0.0.1:3306"
 	cfg.DBName = "Carnac"
 
+	// Get a database handle
 	var err error
 	db, err = sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
@@ -88,27 +93,26 @@ func main() {
 	fmt.Printf("Insult: %v\n", insult)
 
 	// Ask the user to add a new joke or insult to the database
-	fmt.Printf("Add new joke into database\n")
-	fmt.Printf("Start with answer followed by question\n")
-
-	// Add a new joke to the database
-	jokeID, err := addJoke(Jokes{
-		Answer:   "Answer added ",
-		Question: "Question added ",
-	})
-	if err != nil {
-		log.Fatal(err)
+	for {
+		fmt.Println("Do you want to add a new joke or insult to the database? (j/i/n)")
+		var choice string
+		if _, err := fmt.Scanln(&choice); err != nil {
+			fmt.Println("Invalid input, please enter either (j,i or n.")
+			continue
+		}
+		switch choice {
+		case "j":
+			addJoke()
+		case "i":
+			addInsult()
+		case "n":
+			fmt.Println("Exiting...")
+			return
+		default:
+			fmt.Println("Invalid input, please enter either (j,i or n.")
+			continue
+		}
 	}
-	fmt.Printf("ID of added joke: %v\n", jokeID)
-
-	// Add a new insult to the database
-	insultId, err := addInsult(Insults{
-		Insult: "Insult added ",
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("ID of added insult: %v\n", insultId)
 }
 
 // getInsults returns the insults from an sql database
@@ -183,6 +187,29 @@ func getJokeById(id int64) (Jokes, error) {
 		return jok, err
 	}
 	return jok, nil
+}
+
+func addNewJoke() {
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Print("Enter the joke answer first: ")
+	answer, _ := reader.ReadString('\n')
+	answer = strings.TrimSpace(answer)
+
+	fmt.Print("Enter the joke question: ")
+	question, _ := reader.ReadString('\n')
+	question = strings.TrimSpace(question)
+
+	if question == "" || answer == "" {
+		fmt.Println("Both the answer and question must be provided.")
+		return
+	}
+
+	jokeID, err :== addJoke(Jokes{Answer: answer, Question: question})
+	if err != nil {
+		log.Fatalf("Error adding joke: %v", err)
+	}
+	fmt.Printf("Joke added with ID: %d\n", jokeID)
 }
 
 // addInsult adds an insult to the sql database
