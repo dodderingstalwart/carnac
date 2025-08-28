@@ -215,8 +215,8 @@ func findJokeById() {
 		fmt.Println("No joke found with that ID.", err)
 		return
 	}
-	fmt.Printf("The answer is %s\n", joke.Answer)
-	fmt.Printf("The question is %s\n", joke.Question)
+	fmt.Printf("The answer is: %s\n", joke.Answer)
+	fmt.Printf("The question is: %s\n", joke.Question)
 }
 
 // findInsultById prompts the user to enter an insult ID and retrieves the corresponding insult from the database
