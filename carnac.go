@@ -45,18 +45,21 @@ func main() {
 	}
 	fmt.Println("Connected!")
 
+	// Return all insults from the current database
 	insults, err := getInsults(db)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("Insult: %v\n", insults)
 
+	// Return all jokes from the current database
 	jokes, err := getJokes(db)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("Jokes: %v\n", jokes)
 
+	// Find a joke by its ID
 	var id int64
 	fmt.Print("Enter the ID of the joke:")
 	fmt.Scanln(&id)
@@ -66,6 +69,7 @@ func main() {
 	}
 	fmt.Printf("Joke: %v\n", joke)
 
+	// Find an insult by its ID
 	var insultID int64
 	fmt.Print("Enter the ID of the insult:")
 	fmt.Scanln(&insultID)
@@ -75,9 +79,11 @@ func main() {
 	}
 	fmt.Printf("Insult: %v\n", insult)
 
+	// Ask the user to add a new joke or insult to the database
 	fmt.Printf("Add new joke into database\n")
 	fmt.Printf("Start with answer followed by question\n")
 
+	// Add a new joke to the database
 	jokeID, err := addJoke(Jokes{
 		Answer:   "Answer added ",
 		Question: "Question added ",
@@ -87,16 +93,16 @@ func main() {
 	}
 	fmt.Printf("ID of added joke: %v\n", jokeID)
 
-	/*insultID, err := addInsult(Insults{
+	// Add a new insult to the database
+	insultId, err := addInsult(Insults{
 		Insult: "Insult added ",
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("ID of added insult: %v\n", insultID)*/
+	fmt.Printf("ID of added insult: %v\n", insultId)
 }
 
-// getInsults returns the insults from an sql database
 func getInsults(db *sql.DB) ([]Insults, error) {
 	var insults []Insults
 
