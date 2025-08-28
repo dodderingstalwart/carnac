@@ -39,7 +39,9 @@ func main() {
 	if cfg.User == "" || cfg.Passwd == "" {
 		log.Fatal("Environment variables DBUSER and DBPASS must be set")
 	}
+	defer db.Close()
 
+	// Configure the database connection (adjust as needed)
 	cfg.Net = "tcp"
 	cfg.Addr = "127.0.0.1:3306"
 	cfg.DBName = "Carnac"
@@ -94,18 +96,28 @@ func main() {
 
 	// Ask the user to add a new joke or insult to the database
 	for {
-		fmt.Println("Do you want to add a new joke or insult to the database? (j/i/n)")
-		var choice string
+		fmt.Println("Carnac Main Menu")
+		fmt.Println("----------------")
+		fmt.Println("1. Find a joke by ID")
+		fmt.Println("2. Find an insult by ID")
+		fmt.Println("3. Add a new joke")
+		fmt.Println("4. Add a new insult")
+		fmt.Println("5. Exit")
+		var choice int
 		if _, err := fmt.Scanln(&choice); err != nil {
-			fmt.Println("Invalid input, please enter either (j,i or n.")
+			fmt.Println("Invalid input, please try again.")
 			continue
 		}
 		switch choice {
-		case "j":
-			addJoke()
-		case "i":
-			addInsult()
-		case "n":
+		case 1:
+			findJokeById()
+		case 2:
+			findInsultById()
+		case 3:
+			addNewJoke()
+		case 4:
+			addNewInsult()
+		case 5:
 			fmt.Println("Exiting...")
 			return
 		default:
@@ -189,6 +201,42 @@ func getJokeById(id int64) (Jokes, error) {
 	return jok, nil
 }
 
+// findJokeById prompts the user to enter a joke ID and retrieves the corresponding joke from the database
+func findJokeById() {
+	var id int64
+	fmt.Print("Enter the ID of the joke:")
+	if _, err := fmt.Scanln(&id); err != nil {
+		fmt.Println("Invalid input, please try again.")
+		return
+	}
+
+	joke, err := getJokeById(id)
+	if err != nil {
+		fmt.Println("No joke found with that ID.", err)
+		return
+	}
+	fmt.Printf("The answer is %s and %s\n", joke.Answer, joke.Question)
+}
+
+// findInsultById prompts the user to enter an insult ID and retrieves the corresponding insult from the database
+func findInsultById() {
+	var id int64
+	fmt.Print("Enter the ID of the insult:")
+	if _, err := fmt.Scanln(&id); err != nil {
+		fmt.Println("Invalid input, please try again.")
+		return
+	}
+	insult, err := getInsultsById(id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("No insult found with that ID.")
+			return
+		}
+		log.Fatal(err)
+	}
+	fmt.Printf("Insult: %v\n", insult)
+}
+
 // addNewJoke prompts the user to add a new joke to the database
 func addNewJoke() {
 	reader := bufio.NewReader(os.Stdin)
@@ -206,7 +254,7 @@ func addNewJoke() {
 		return
 	}
 
-	jokeID, err :== addJoke(Jokes{Answer: answer, Question: question})
+	jokeID, err := addJoke(Jokes{Answer: answer, Question: question})
 	if err != nil {
 		log.Fatalf("Error adding joke: %v", err)
 	}
