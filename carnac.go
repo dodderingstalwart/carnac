@@ -33,6 +33,9 @@ func main() {
 	cfg := mysql.NewConfig()
 	cfg.User = os.Getenv("DBUSER")
 	cfg.Passwd = os.Getenv("DBPASS")
+	if cfg.User == "" || cfg.Passwd == "" {
+		log.Fatal("Environment variables DBUSER and DBPASS must be set")
+	}
 	cfg.Net = "tcp"
 	cfg.Addr = "127.0.0.1:3306"
 	cfg.DBName = "Carnac"
