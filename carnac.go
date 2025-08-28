@@ -213,6 +213,7 @@ func addNewJoke() {
 	fmt.Printf("Joke added with ID: %d\n", jokeID)
 }
 
+// addNewInsult prompts the user to add a new insult to the database
 func addNewInsult() {
 	reader := bufio.NewReader(os.Stdin)
 
