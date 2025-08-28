@@ -189,6 +189,7 @@ func getJokeById(id int64) (Jokes, error) {
 	return jok, nil
 }
 
+// addNewJoke prompts the user to add a new joke to the database
 func addNewJoke() {
 	reader := bufio.NewReader(os.Stdin)
 
@@ -210,6 +211,25 @@ func addNewJoke() {
 		log.Fatalf("Error adding joke: %v", err)
 	}
 	fmt.Printf("Joke added with ID: %d\n", jokeID)
+}
+
+func addNewInsult() {
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Print("Enter the insult: ")
+	insult, _ := reader.ReadString('\n')
+	insult = strings.TrimSpace(insult)
+
+	if insult == "" {
+		fmt.Println("Insult must be provided.")
+		return
+	}
+
+	insultID, err := addInsult(Insults{Insult: insult})
+	if err != nil {
+		log.Fatalf("Error adding insult: %v", err)
+	}
+	fmt.Printf("Insult added with ID: %d\n", insultID)
 }
 
 // addInsult adds an insult to the sql database
