@@ -1,5 +1,6 @@
 package main
 
+// Importing packages
 import (
 	"database/sql"
 	"fmt"
@@ -9,19 +10,23 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
+// Insults represents an insult with an ID and the insult text
 type Insults struct {
 	ID     int64
 	Insult string
 }
 
+// Jokes represents a joke with an ID, answer, and question
 type Jokes struct {
 	ID       int64
 	Answer   string
 	Question string
 }
 
+// db is a pointer to the sql database
 var db *sql.DB
 
+// main connects to the database and runs various functions to demonstrate functionality
 func main() {
 
 	// Connecting to the sql database
@@ -103,6 +108,7 @@ func main() {
 	fmt.Printf("ID of added insult: %v\n", insultId)
 }
 
+// getInsults returns the insults from an sql database
 func getInsults(db *sql.DB) ([]Insults, error) {
 	var insults []Insults
 
@@ -125,6 +131,7 @@ func getInsults(db *sql.DB) ([]Insults, error) {
 	return insults, nil
 }
 
+// getInsultsById returns an insult from an sql database by its id
 func getInsultsById(id int64) (Insults, error) {
 	var ins Insults
 
