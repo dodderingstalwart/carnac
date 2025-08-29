@@ -60,40 +60,6 @@ func main() {
 	}
 	fmt.Println("Connected!")
 
-	// Return all insults from the current database
-	insults, err := getInsults(db)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("Insult: %v\n", insults)
-
-	// Return all jokes from the current database
-	jokes, err := getJokes(db)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("Jokes: %v\n", jokes)
-
-	// Find a joke by its ID
-	var id int64
-	fmt.Print("Enter the ID of the joke:")
-	fmt.Scanln(&id)
-	joke, err := getJokeById(id)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("Joke: %v\n", joke)
-
-	// Find an insult by its ID
-	var insultID int64
-	fmt.Print("Enter the ID of the insult:")
-	fmt.Scanln(&insultID)
-	insult, err := getInsultsById(insultID)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("Insult: %v\n", insult)
-
 	// Ask the user to add a new joke or insult to the database
 	for {
 		fmt.Println("Carnac Main Menu")
@@ -102,7 +68,10 @@ func main() {
 		fmt.Println("2. Find an insult by ID")
 		fmt.Println("3. Add a new joke")
 		fmt.Println("4. Add a new insult")
-		fmt.Println("5. Exit")
+		fmt.Println("5. Display all insults")
+		fmt.Println("6. Display all jokes")
+		fmt.Println("7. Exit")
+
 		var choice int
 		if _, err := fmt.Scanln(&choice); err != nil {
 			fmt.Println("Invalid input, please try again.")
@@ -118,6 +87,10 @@ func main() {
 		case 4:
 			addNewInsult()
 		case 5:
+			displayAllInsults()
+		case 6:
+			displayAllJokes()
+		case 7:
 			fmt.Println("Exiting...")
 			return
 		default:
@@ -153,6 +126,30 @@ func initDB() error {
 		return err
 	}
 	return nil
+}
+
+func displayAllInsults() {
+	fmt.Println("All the insults in the database:")
+	insults, err := getInsults(db)
+	if err != nil {
+		log.Printf("Error could not retrieve insults: %v", err)
+	} else {
+		for _, ins := range insults {
+			fmt.Printf("ID: %d, Insult: %s\n", ins.ID, ins.Insult)
+		}
+	}
+}
+
+func displayAllJokes() {
+	fmt.Println("All the jokes in the database:")
+	jokes, err := getJokes(db)
+	if err != nil {
+		log.Printf("Error could not retrieve jokes: %v", err)
+	} else {
+		for _, jok := range jokes {
+			fmt.Printf("ID: %d, Answer: %s, Question: %s\n", jok.ID, jok.Answer, jok.Question)
+		}
+	}
 }
 
 // getInsults returns the insults from an sql database
