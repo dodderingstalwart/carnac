@@ -62,7 +62,7 @@ func main() {
 
 	// Ask the user to add a new joke or insult to the database
 	for {
-		fmt.Println("Carnac Main Menu")
+		fmt.Println("\nCarnac Main Menu")
 		fmt.Println("----------------")
 		fmt.Println("1. Find a joke by ID")
 		fmt.Println("2. Find an insult by ID")
@@ -94,7 +94,7 @@ func main() {
 			fmt.Println("Exiting...")
 			return
 		default:
-			fmt.Println("Invalid input, please enter either (j,i or n.")
+			fmt.Println("Invalid input, please enter either (1-7).")
 			continue
 		}
 	}
