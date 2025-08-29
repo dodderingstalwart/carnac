@@ -100,6 +100,7 @@ func main() {
 	}
 }
 
+// initDB initializes the database connection
 func initDB() error {
 	// Connecting to the sql database
 	cfg := mysql.NewConfig()
@@ -128,6 +129,7 @@ func initDB() error {
 	return nil
 }
 
+// displayAllInsults retrieves and displays all insults from the database
 func displayAllInsults() {
 	fmt.Println("All the insults in the database:")
 	insults, err := getInsults(db)
@@ -140,6 +142,7 @@ func displayAllInsults() {
 	}
 }
 
+// displayAllJokes retrieves and displays all jokes from the database
 func displayAllJokes() {
 	fmt.Println("All the jokes in the database:")
 	jokes, err := getJokes(db)
