@@ -31,7 +31,12 @@ var db *sql.DB
 // main connects to the database and runs various functions to demonstrate functionality
 func main() {
 
-	// Connecting to the sql database
+	// Initialize the database connection
+	if err := initDB(); err != nil {
+		log.Fatalf("Could not connect to the database: %v", err)
+	}
+
+	/* Connecting to the sql database
 	cfg := mysql.NewConfig()
 	cfg.User = os.Getenv("DBUSER")
 	cfg.Passwd = os.Getenv("DBPASS")
@@ -59,6 +64,11 @@ func main() {
 		log.Fatal(pingErr)
 	}
 	fmt.Println("Connected!")
+
+	*/
+
+	// Defer closing the database connection until the main function exits
+	defer db.Close()
 
 	// Ask the user to add a new joke or insult to the database
 	for {
