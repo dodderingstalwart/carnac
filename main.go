@@ -62,6 +62,7 @@ func main() {
 
 	// Ask the user to add a new joke or insult to the database
 	for {
+		// The main menu of the application
 		fmt.Println("\nCarnac Main Menu")
 		fmt.Println("----------------")
 		fmt.Println("1. Find a joke by ID")
@@ -72,6 +73,8 @@ func main() {
 		fmt.Println("6. Display all jokes")
 		fmt.Println("7. Exit")
 
+		// Fetching the user input
+		fmt.Print("Enter your choice (1-7): ")
 		var choice int
 		if _, err := fmt.Scanln(&choice); err != nil {
 			fmt.Println("Invalid input, please try again.")
