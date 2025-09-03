@@ -1,14 +1,34 @@
-FROM golang:alpine3.22 as builder
+FROM golang:1.21-alpine AS build
 
-WORKDIR /carnac
+WORKDIR /app
+
+RUN apk add --no-cache git
 
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o carnac .
 
-FROM alpine:3.22
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
-COPY --from=builder /carnac /usr/local/bin/carnac
-CMD ["/carnac"]
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates tzdata
+
+RUN adduser -D -s /bin/sh appuser
+
+WORKDIR /root/
+
+COPY --from=build /app/main .
+
+RUN chown appuser:appuser main
+
+USER appuser
+
+ENV DBUSER=root
+ENV DBPASSWORD=password
+ENV DBHOST=localhost
+ENV DBPORT=3306
+ENV DBNAME=carnac
+
+CMD ["./main"]
