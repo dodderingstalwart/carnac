@@ -104,7 +104,7 @@ func main() {
 		case 6:
 			displayAllJokes()
 		case 7:
-			fmt.Println("Exiting...")
+			fmt.Println("Program is currently exiting...")
 			return
 		default:
 			fmt.Println("Invalid input, please enter either (1-7).")
