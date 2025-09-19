@@ -36,37 +36,6 @@ func main() {
 		log.Fatalf("Could not connect to the database: %v", err)
 	}
 
-	/* Connecting to the sql database
-	cfg := mysql.NewConfig()
-	cfg.User = os.Getenv("DBUSER")
-	cfg.Passwd = os.Getenv("DBPASS")
-	// Check if DBUSER and DBPASS environment variables are set
-	if cfg.User == "" || cfg.Passwd == "" {
-		log.Fatal("Environment variables DBUSER and DBPASS must be set")
-	}
-	defer db.Close()
-
-	// Configure the database connection (adjust as needed)
-	cfg.Net = "tcp"
-	cfg.Addr = "127.0.0.1:3306"
-	cfg.DBName = "Carnac"
-
-	// Get a database handle
-	var err error
-	db, err = sql.Open("mysql", cfg.FormatDSN())
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Test the connection to the database and output Connected! if successful
-	pingErr := db.Ping()
-	if pingErr != nil {
-		log.Fatal(pingErr)
-	}
-	fmt.Println("Connected!")
-
-	*/
-
 	// Defer closing the database connection until the main function exits
 	defer db.Close()
 
@@ -132,6 +101,16 @@ func initDB() error {
 		return err
 	}
 	return nil
+}
+
+func getUserChoice() int {
+	var choice int
+	fmt.Print("Enter your choice (1-7): ")} {
+	if _, err := fmt.Scanln(&choice); err != nil {
+		bufio.NewReader(os.Stdin).ReadLine()
+		return 0
+	}
+	return choice
 }
 
 // displayAllInsults retrieves and displays all insults from the database
