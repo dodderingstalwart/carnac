@@ -73,15 +73,7 @@ func main() {
 	// Ask the user to add a new joke or insult to the database
 	for {
 		// The main menu of the application
-		fmt.Println("\nCarnac Main Menu")
-		fmt.Println("----------------")
-		fmt.Println("1. Find a joke by ID")
-		fmt.Println("2. Find an insult by ID")
-		fmt.Println("3. Add a new joke")
-		fmt.Println("4. Add a new insult")
-		fmt.Println("5. Display all insults")
-		fmt.Println("6. Display all jokes")
-		fmt.Println("7. Exit")
+		showMainMenu()
 
 		// Fetching the user input
 		fmt.Print("Enter your choice (1-7): ")
@@ -347,4 +339,16 @@ func addJoke(jok Jokes) (int64, error) {
 		return 0, nil
 	}
 	return id, nil
+}
+
+func showMainMenu() {
+	fmt.Println("\n***Carnac Main Menu***")
+	fmt.Println("----------------")
+	fmt.Println("1. Find a joke by ID")
+	fmt.Println("2. Find an insult by ID")
+	fmt.Println("3. Add a new joke")
+	fmt.Println("4. Add a new insult")
+	fmt.Println("5. Display all insults")
+	fmt.Println("6. Display all jokes")
+	fmt.Println("7. Exit")
 }
