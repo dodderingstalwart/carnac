@@ -44,13 +44,8 @@ func main() {
 		// The main menu of the application
 		showMainMenu()
 
-		// Fetching the user input
-		fmt.Print("Enter your choice (1-7): ")
-		var choice int
-		if _, err := fmt.Scanln(&choice); err != nil {
-			fmt.Println("Invalid input, please try again.")
-			continue
-		}
+		choice := getUserChoice()
+
 		switch choice {
 		case 1:
 			findJokeById()
@@ -105,7 +100,7 @@ func initDB() error {
 
 func getUserChoice() int {
 	var choice int
-	fmt.Print("Enter your choice (1-7): ")} {
+	fmt.Print("Enter your choice (1-7): ")
 	if _, err := fmt.Scanln(&choice); err != nil {
 		bufio.NewReader(os.Stdin).ReadLine()
 		return 0
