@@ -8,3 +8,4 @@ An opensource Go application to input Carnac jokes and/or insults and store them
 # Roadmap
 * Put the data into a bucket on a selected cloud provider.
 * Input the database to an LLVM in order to create modern Carnac jokes and/or insults.
+* That will create new Carnac jokes based on current events.
