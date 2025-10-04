@@ -1,3 +1,4 @@
+![alt text](https://upload.wikimedia.org/wikipedia/en/1/10/Carnac_the_Magnificent.jpg)
 # Carnac
 An opensource Go application to input Carnac jokes and/or insults and store them into a database.<br>
 * Creates an SQL database for jokes and insults
