@@ -4,6 +4,7 @@ package main
 import (
 	"bufio"
 	sql "database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -23,6 +24,13 @@ type Jokes struct {
 	ID       int64
 	Answer   string
 	Question string
+}
+
+type CarnacEntry struct {
+	ID       int64  `json:"id"`
+	Answer   string `json:"answer,omitempty"`
+	Question string `json:"question,omitempty"`
+	Insult   string `json:"insult,omitempty"`
 }
 
 // db is a pointer to the sql database
@@ -325,4 +333,58 @@ func showMainMenu() {
 	fmt.Println("5. Display all insults")
 	fmt.Println("6. Display all jokes")
 	fmt.Println("7. Exit")
+}
+
+func export_to_json(dbString string, output string) error {
+	// Connect to the database
+	db, err := sql.Open("mysql", dbString)
+	if err != nil {
+		return fmt.Errorf("could not connect to the database: %v", err)
+	}
+	defer db.Close()
+
+	var entries []CarnacEntry
+
+	// Fetch jokes
+	jokes, err := db.Query("SELECT answer, question FROM Jokes")
+	if err != nil {
+		return fmt.Errorf("could not fetch jokes: %v", err)
+	}
+	defer jokes.Close()
+
+	for jokes.Next() {
+		var entry CarnacEntry
+		err = jokes.Scan(&entry.Answer, &entry.Question)
+		if err != nil {
+			return fmt.Errorf("could not scan joke: %v", err)
+		}
+		entries = append(entries, entry)
+	}
+
+	// Fetch insults
+	insults, err := db.Query("SELECT insult FROM Insults")
+	if err != nil {
+		return fmt.Errorf("could not fetch insults: %v", err)
+	}
+	defer insults.Close()
+
+	for insults.Next() {
+		var entry CarnacEntry
+		err = insults.Scan(&entry.Insult)
+		if err != nil {
+			return fmt.Errorf("could not scan insult: %v", err)
+		}
+		entries = append(entries, entry)
+	}
+
+	// Converting to JSON and writing to file
+	file, err := os.Create(output)
+	if err != nil {
+		return fmt.Errorf("could not create output file: %v", err)
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(entries)
 }
