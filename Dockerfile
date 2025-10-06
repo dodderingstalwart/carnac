@@ -28,6 +28,9 @@ USER appuser
 
 EXPOSE 8080
 
+ENV DBUSER=DBUSER \
+    DBPASS=DBPASS
+
 VOLUME ["/app/database"]
 
 CMD ["./carnac"]

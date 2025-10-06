@@ -227,6 +227,7 @@ func findJokeById() {
 		return
 	}
 
+	// Get the joke from the database
 	joke, err := getJokeById(id)
 	if err != nil {
 		fmt.Println("No joke found with that ID.", err)
@@ -244,6 +245,7 @@ func findInsultById() {
 		fmt.Println("Invalid input, please try again.")
 		return
 	}
+	// Get the insult from the database
 	insult, err := getInsultsById(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -259,7 +261,7 @@ func findInsultById() {
 func addNewJoke() {
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Print("Enter the joke answer first: ")
+	fmt.Print("Enter the joke with answer first: ")
 	answer, _ := reader.ReadString('\n')
 	answer = strings.TrimSpace(answer)
 
