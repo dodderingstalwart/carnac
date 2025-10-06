@@ -68,6 +68,8 @@ func main() {
 		case 6:
 			displayAllJokes()
 		case 7:
+			//export_to_json()
+		case 8:
 			fmt.Println("Program is currently exiting...")
 			return
 		default:
@@ -332,7 +334,8 @@ func showMainMenu() {
 	fmt.Println("4. Add a new insult")
 	fmt.Println("5. Display all insults")
 	fmt.Println("6. Display all jokes")
-	fmt.Println("7. Exit")
+	fmt.Println("7. Export database to JSON file")
+	fmt.Println("8. Exit")
 }
 
 func export_to_json(dbString string, output string) error {
