@@ -68,7 +68,7 @@ func main() {
 		case 6:
 			displayAllJokes()
 		case 7:
-			//export_to_json()
+			//exportToJSON()
 		case 8:
 			fmt.Println("Program is currently exiting...")
 			return
@@ -87,12 +87,11 @@ func initDB() error {
 	cfg.Passwd = os.Getenv("DBPASS")
 	// Check if DBUSER and DBPASS environment variables are set
 	if cfg.User == "" || cfg.Passwd == "" {
-		log.Fatal("Environment variables DBUSER and DBPASS must be set")
+		log.Fatal("Environment variables DBUSER and DBPASS are not set")
 	}
 
 	// Configure the database connection (adjust as needed)
 	cfg.Net = "tcp"
-	cfg.Addr = "127.0.0.1:3306"
 	cfg.DBName = "Carnac"
 
 	// Get a database handle
@@ -340,7 +339,7 @@ func showMainMenu() {
 	fmt.Println("8. Exit")
 }
 
-func export_to_json(dbString string, output string) error {
+func exportToJSON(dbString string, output string) error {
 	// Connect to the database
 	db, err := sql.Open("mysql", dbString)
 	if err != nil {
