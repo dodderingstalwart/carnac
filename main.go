@@ -68,7 +68,7 @@ func main() {
 		case 6:
 			displayAllJokes()
 		case 7:
-			//export_to_json()
+			handleExportCommand("carnac_export.json")
 		case 8:
 			fmt.Println("Program is currently exiting...")
 			return
@@ -76,6 +76,23 @@ func main() {
 			fmt.Println("Invalid input, please enter either (1-7).")
 			continue
 		}
+	}
+}
+
+// handleExportCommand handles the export command to export the database to a JSON file
+func handleExportCommand(output string) {
+	cfg := mysql.NewConfig()
+	cfg.User = os.Getenv("DBUSER")
+	cfg.Passwd = os.Getenv("DBPASS")
+
+	if cfg.User == "" || cfg.Passwd == "" {
+		log.Fatal("DBUSER and DBPASS are not set")
+	}
+
+	if err := export_to_json(cfg.FormatDSN(), output); err != nil {
+		log.Fatalf("Error exporting database to JSON: %v", err)
+	} else {
+		fmt.Printf("Database successfully exported %s\n", output)
 	}
 }
 
