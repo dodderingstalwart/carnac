@@ -5,6 +5,7 @@ import (
 	"bufio"
 	sql "database/sql"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -38,6 +39,12 @@ var db *sql.DB
 
 // main connects to the database and runs various functions to demonstrate functionality
 func main() {
+	// Subcommand definitions
+	cmdJoke := flag.NewFlagSet("joke", flag.ExitOnError)
+	cmdInsult := flag.NewFlagSet("insult", flag.ExitOnError)
+	cmdList := flag.NewFlagSet("list", flag.ExitOnError)
+	cmdExport := flag.NewFlagSet("export", flag.ExitOnError)
+	cmdInteractive := flag.NewFlagSet("interactive", flag.ExitOnError)
 
 	// Initialize the database connection
 	if err := initDB(); err != nil {
