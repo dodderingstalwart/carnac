@@ -8,7 +8,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
@@ -39,12 +41,18 @@ var db *sql.DB
 
 // main connects to the database and runs various functions to demonstrate functionality
 func main() {
-	// Subcommand definitions
-	cmdJoke := flag.NewFlagSet("joke", flag.ExitOnError)
-	cmdInsult := flag.NewFlagSet("insult", flag.ExitOnError)
-	cmdList := flag.NewFlagSet("list", flag.ExitOnError)
-	cmdExport := flag.NewFlagSet("export", flag.ExitOnError)
-	cmdInteractive := flag.NewFlagSet("interactive", flag.ExitOnError)
+	// Subcommand flag definitions
+	cmdGetInsultById := flag.Bool("insult-id", false, "Find an insult by ID")
+	cmdGetJokeById := flag.Bool("joke-id", false, "Find a joke by ID")
+	cmdGetJokeList := flag.Bool("List-jokes", false, "List all jokes")
+	cmdGetInsultList := flag.Bool("List-insults", false, "List all insults")
+	cmdExport := flag.String("export", "", "Export the database to a JSON file")
+	cmdInteractive := flag.Bool("interactive", false, "Run in interactive mode")
+	cmdServer := flag.Bool("server", false, "Run as a web server")
+	cmdPort := flag.String("port", "8080", "Port to run the web server on")
+	cmdDbHost := flag.String("dbhost", "localhost:3306", "Database host address")
+
+	flag.Parse()
 
 	// Initialize the database connection
 	if err := initDB(); err != nil {
@@ -62,9 +70,9 @@ func main() {
 		choice := getUserChoice()
 
 		switch choice {
-		case 1:
-			findJokeById()
-		case 2:
+		case *cmdServer:
+			startHTTPServer(*cmdPort)
+		case *listJokes:
 			findInsultById()
 		case 3:
 			addNewJoke()
@@ -86,6 +94,53 @@ func main() {
 	}
 }
 
+func startHTTPServer(port string) {
+	http.HandleFunc("/joke", jokeHandler)
+	http.HandleFunc("/insult", insultHandler)
+	http.HandleFunc("/export", exportHandler)
+
+	fmt.Printf("Starting server on port %s...\n", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatalf("Could not start server: %v", err)
+	}
+}
+
+func jokeHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		idParam := r.URL.Query().Get("id")
+		if idParam == "" {
+			id, err := strconv.ParseInt(idstr, 10, 64)
+			if err != nil {
+				http.Error(w, "Invalid 'id' parameter", http.StatusBadRequest)
+				return
+			}
+			joke, err := getJokeById(id)
+			if err != nil {
+				http.Error(w, "Joke not found", http.StatusNotFound)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(joke)
+		}
+	case "POST":
+		var jok Jokes
+		if err := json.NewDecoder(r.Body).Decode(&jok); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		id, err := addJoke(jok)
+		if err != nil {
+			http.Error(w, "Could not add joke", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(map[string]int64{"id": id})
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
 // handleExportCommand handles the export command to export the database to a JSON file
 func handleExportCommand(output string) {
 	cfg := mysql.NewConfig()
@@ -101,6 +156,75 @@ func handleExportCommand(output string) {
 	} else {
 		fmt.Printf("Database successfully exported %s\n", output)
 	}
+}
+
+func insultHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		idParam := r.URL.Query().Get("id")
+		if idParam != "" {
+			id, err := strconv.ParseInt(idParam, 10, 64)
+			if err != nil {
+				http.Error(w, "Invalid 'id' parameter", http.StatusBadRequest)
+				return
+			}
+			insult, err := getInsultsById(id)
+			if err != nil {
+				http.Error(w, "Insult not found", http.StatusNotFound)
+				return
+			}
+			json.NewEncoder(w).Encode(insult)
+		} else {
+			insults, err := getInsults(db)
+			if err != nil {
+				http.Error(w, "Could not retrieve insults", http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(insults)
+		}
+	case "POST":
+		var ins Insults
+		if err := json.NewDecoder(r.Body).Decode(&ins); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		id, err := addInsult(ins)
+		if err != nil {
+			http.Error(w, "Could not add insult", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(map[string]int64{"id": id})
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func exportHandler(w http.ResponseWriter, r *http.Request) {
+	var entries []CarnacEntry
+
+	// Fetch jokes
+	jokes, err :=  getJokes(db))
+	for _, j := range jokes {
+		entries = append(entries, CarnacEntry{
+			ID:       j.ID,
+			Answer:   j.Answer,
+			Question: j.Question,
+		})
+	}
+
+	// Fetch insults
+	insults, err := getInsults(db)
+	for _, i := range insults {
+		entries = append(entries, CarnacEntry{
+			ID:     i.ID,
+			Insult: i.Insult,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(entries)
 }
 
 // initDB initializes the database connection
