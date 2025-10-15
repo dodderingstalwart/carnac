@@ -136,6 +136,7 @@ func interactiveMenu() {
 	}
 }
 
+// startHTTPServer starts an HTTP server with various endpoints
 func startHTTPServer(port string) {
 	http.HandleFunc("/joke", jokeHandler)
 	http.HandleFunc("/insult", insultHandler)
@@ -149,6 +150,7 @@ func startHTTPServer(port string) {
 	}
 }
 
+// readyHandler checks if the database connection is alive
 func readyHandler(w http.ResponseWriter, r *http.Request) {
 	if err := db.Ping(); err != nil {
 		http.Error(w, "Database not ready", http.StatusServiceUnavailable)
@@ -158,11 +160,13 @@ func readyHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Ready"))
 }
 
+// statusHandler handles health check requests
 func statusHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("OK"))
 }
 
+// jokeHandler handles requests related to jokes
 func jokeHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
@@ -216,6 +220,7 @@ func handleExportCommand(output string) {
 	}
 }
 
+// insultHandler handles HTTP requests for insults
 func insultHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
@@ -259,6 +264,7 @@ func insultHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// exportHandler exports all jokes and insults to JSON format
 func exportHandler(w http.ResponseWriter, r *http.Request) {
 	var entries []CarnacEntry
 
