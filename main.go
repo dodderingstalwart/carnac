@@ -42,8 +42,8 @@ var db *sql.DB
 // main connects to the database and runs various functions to demonstrate functionality
 func main() {
 	// Subcommand flag definitions
-	cmdGetInsultById := flag.Bool("insult-id", false, "Find an insult by ID")
-	cmdGetJokeById := flag.Bool("joke-id", false, "Find a joke by ID")
+	cmdGetInsultById := flag.Int64("insult-id", 0, "Find an insult by ID")
+	cmdGetJokeById := flag.Int64("joke-id", 0, "Find a joke by ID")
 	cmdGetJokeList := flag.Bool("List-jokes", false, "List all jokes")
 	cmdGetInsultList := flag.Bool("List-insults", false, "List all insults")
 	cmdExport := flag.String("export", "", "Export the database to a JSON file")
@@ -64,7 +64,7 @@ func main() {
 
 	// Handle subcommands
 	switch {
-	case *server:
+	case *cmdServer:
 		startHTTPServer(*cmdPort)
 	case *cmdGetJokeList:
 		displayAllJokes()
@@ -168,7 +168,7 @@ func jokeHandler(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		idParam := r.URL.Query().Get("id")
 		if idParam == "" {
-			id, err := strconv.ParseInt(idstr, 10, 64)
+			id, err := strconv.ParseInt(idParam, 10, 64)
 			if err != nil {
 				http.Error(w, "Invalid 'id' parameter", http.StatusBadRequest)
 				return
@@ -273,7 +273,7 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch insults
-	insults, err := getInsults(db)
+	insults, _ := getInsults(db)
 	for _, i := range insults {
 		entries = append(entries, CarnacEntry{
 			ID:     i.ID,
