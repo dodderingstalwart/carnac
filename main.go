@@ -5,9 +5,12 @@ import (
 	"bufio"
 	sql "database/sql"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
@@ -38,6 +41,18 @@ var db *sql.DB
 
 // main connects to the database and runs various functions to demonstrate functionality
 func main() {
+	// Subcommand flag definitions
+	cmdGetInsultById := flag.Int64("insult-id", 0, "Find an insult by ID")
+	cmdGetJokeById := flag.Int64("joke-id", 0, "Find a joke by ID")
+	cmdGetJokeList := flag.Bool("List-jokes", false, "List all jokes")
+	cmdGetInsultList := flag.Bool("List-insults", false, "List all insults")
+	cmdExport := flag.String("export", "", "Export the database to a JSON file")
+	cmdInteractive := flag.Bool("interactive", false, "Run in interactive mode")
+	cmdServer := flag.Bool("server", false, "Run as a web server")
+	cmdPort := flag.String("port", "8080", "Port to run the web server on")
+	cmdDbHost := flag.String("dbhost", "localhost:3306", "Database host address")
+
+	flag.Parse()
 
 	// Initialize the database connection
 	if err := initDB(); err != nil {
@@ -47,11 +62,53 @@ func main() {
 	// Defer closing the database connection until the main function exits
 	defer db.Close()
 
-	// Ask the user to add a new joke or insult to the database
-	for {
-		// The main menu of the application
-		showMainMenu()
+	// Handle subcommands
+	switch {
+	case *cmdServer:
+		startHTTPServer(*cmdPort)
+	case *cmdGetJokeList:
+		displayAllJokes()
+	case *cmdGetInsultList:
+		displayAllInsults()
+	case *cmdGetJokeById > 0:
+		joke, err := getJokeById(int64(*cmdGetJokeById))
+		if err != nil {
+			log.Fatalf("Could not retrieve joke: %v", err)
+		}
+		fmt.Printf("Joke ID: %d, Answer: %s, Question: %s\n", joke.ID, joke.Answer, joke.Question)
+	case *cmdGetInsultById > 0:
+		insult, err := getInsultsById(int64(*cmdGetInsultById))
+		if err != nil {
+			log.Fatalf("Could not retrieve insult: %v", err)
+		}
+		fmt.Printf("Insult ID: %d, Insult: %s\n", insult.ID, insult.Insult)
+	case *cmdExport != "":
+		cfg := mysql.NewConfig()
+		cfg.User = os.Getenv("DBUSER")
+		cfg.Passwd = os.Getenv("DBPASS")
+		cfg.Net = "tcp"
+		cfg.Addr = *cmdDbHost
+		cfg.DBName = "Carnac"
 
+		if cfg.User == "" || cfg.Passwd == "" {
+			log.Fatal("DBUSER and DBPASS are not set")
+		}
+		if err := export_to_json(cfg.FormatDSN(), *cmdExport); err != nil {
+			log.Fatalf("Error exporting database to JSON: %v", err)
+		}
+		fmt.Printf("Database successfully exported to %s\n", *cmdExport)
+	case *cmdInteractive:
+		interactiveMenu()
+	default:
+		fmt.Println("Carnac Database Management")
+		fmt.Println("\nUsage:")
+		flag.PrintDefaults()
+	}
+}
+
+func interactiveMenu() {
+	for {
+		showMainMenu()
 		choice := getUserChoice()
 
 		switch choice {
@@ -68,15 +125,170 @@ func main() {
 		case 6:
 			displayAllJokes()
 		case 7:
-			//exportToJSON()
+			//export_to_json()
 		case 8:
-			fmt.Println("Program is currently exiting...")
+			fmt.Println("Exiting...")
 			return
 		default:
-			fmt.Println("Invalid input, please enter either (1-7).")
+			fmt.Println("Invalid choice, please try again.")
 			continue
 		}
 	}
+}
+
+// startHTTPServer starts an HTTP server with various endpoints
+func startHTTPServer(port string) {
+	http.HandleFunc("/joke", jokeHandler)
+	http.HandleFunc("/insult", insultHandler)
+	http.HandleFunc("/export", exportHandler)
+	http.HandleFunc("/status", statusHandler)
+	http.HandleFunc("/ready", readyHandler)
+
+	fmt.Printf("Starting server on port %s...\n", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatalf("Could not start server: %v", err)
+	}
+}
+
+// readyHandler checks if the database connection is alive
+func readyHandler(w http.ResponseWriter, r *http.Request) {
+	if err := db.Ping(); err != nil {
+		http.Error(w, "Database not ready", http.StatusServiceUnavailable)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Ready"))
+}
+
+// statusHandler handles health check requests
+func statusHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
+}
+
+// jokeHandler handles requests related to jokes
+func jokeHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		idParam := r.URL.Query().Get("id")
+		if idParam == "" {
+			id, err := strconv.ParseInt(idParam, 10, 64)
+			if err != nil {
+				http.Error(w, "Invalid 'id' parameter", http.StatusBadRequest)
+				return
+			}
+			joke, err := getJokeById(id)
+			if err != nil {
+				http.Error(w, "Joke not found", http.StatusNotFound)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(joke)
+		}
+	case "POST":
+		var jok Jokes
+		if err := json.NewDecoder(r.Body).Decode(&jok); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		id, err := addJoke(jok)
+		if err != nil {
+			http.Error(w, "Could not add joke", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(map[string]int64{"id": id})
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// handleExportCommand handles the export command to export the database to a JSON file
+func handleExportCommand(output string) {
+	cfg := mysql.NewConfig()
+	cfg.User = os.Getenv("DBUSER")
+	cfg.Passwd = os.Getenv("DBPASS")
+
+	if cfg.User == "" || cfg.Passwd == "" {
+		log.Fatal("DBUSER and DBPASS are not set")
+	}
+
+	if err := export_to_json(cfg.FormatDSN(), output); err != nil {
+		log.Fatalf("Error exporting database to JSON: %v", err)
+	} else {
+		fmt.Printf("Database successfully exported %s\n", output)
+	}
+}
+
+// insultHandler handles HTTP requests for insults
+func insultHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		idParam := r.URL.Query().Get("id")
+		if idParam != "" {
+			id, err := strconv.ParseInt(idParam, 10, 64)
+			if err != nil {
+				http.Error(w, "Invalid 'id' parameter", http.StatusBadRequest)
+				return
+			}
+			insult, err := getInsultsById(id)
+			if err != nil {
+				http.Error(w, "Insult not found", http.StatusNotFound)
+				return
+			}
+			json.NewEncoder(w).Encode(insult)
+		} else {
+			insults, err := getInsults(db)
+			if err != nil {
+				http.Error(w, "Could not retrieve insults", http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(insults)
+		}
+	case "POST":
+		var ins Insults
+		if err := json.NewDecoder(r.Body).Decode(&ins); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		id, err := addInsult(ins)
+		if err != nil {
+			http.Error(w, "Could not add insult", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(map[string]int64{"id": id})
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// exportHandler exports all jokes and insults to JSON format
+func exportHandler(w http.ResponseWriter, r *http.Request) {
+	var entries []CarnacEntry
+
+	// Fetch jokes
+	jokes, _ := getJokes(db)
+	for _, j := range jokes {
+		entries = append(entries, CarnacEntry{
+			ID:       j.ID,
+			Answer:   j.Answer,
+			Question: j.Question,
+		})
+	}
+
+	// Fetch insults
+	insults, _ := getInsults(db)
+	for _, i := range insults {
+		entries = append(entries, CarnacEntry{
+			ID:     i.ID,
+			Insult: i.Insult,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(entries)
 }
 
 // initDB initializes the database connection
