@@ -93,7 +93,7 @@ func main() {
 		if cfg.User == "" || cfg.Passwd == "" {
 			log.Fatal("DBUSER and DBPASS are not set")
 		}
-		if err := export_to_json(cfg.FormatDSN(), *cmdExport); err != nil {
+		if err := exportToJSON(cfg.FormatDSN(), *cmdExport); err != nil {
 			log.Fatalf("Error exporting database to JSON: %v", err)
 		}
 		fmt.Printf("Database successfully exported to %s\n", *cmdExport)
@@ -213,7 +213,7 @@ func handleExportCommand(output string) {
 		log.Fatal("DBUSER and DBPASS are not set")
 	}
 
-	if err := export_to_json(cfg.FormatDSN(), output); err != nil {
+	if err := exportToJSON(cfg.FormatDSN(), output); err != nil {
 		log.Fatalf("Error exporting database to JSON: %v", err)
 	} else {
 		fmt.Printf("Database successfully exported %s\n", output)
