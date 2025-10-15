@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
-	"golang.org/x/tools/go/cfg"
 )
 
 // Insults represents an insult with an ID and the insult text
@@ -90,7 +89,7 @@ func main() {
 		cfg.Net = "tcp"
 		cfg.Addr = *cmdDbHost
 		cfg.DBName = "Carnac"
-		
+
 		if cfg.User == "" || cfg.Passwd == "" {
 			log.Fatal("DBUSER and DBPASS are not set")
 		}
@@ -264,7 +263,7 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 	var entries []CarnacEntry
 
 	// Fetch jokes
-	jokes, err :=  getJokes(db))
+	jokes, _ := getJokes(db)
 	for _, j := range jokes {
 		entries = append(entries, CarnacEntry{
 			ID:       j.ID,
