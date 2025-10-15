@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
+	"golang.org/x/tools/go/cfg"
 )
 
 // Insults represents an insult with an ID and the insult text
@@ -62,17 +63,59 @@ func main() {
 	// Defer closing the database connection until the main function exits
 	defer db.Close()
 
-	// Ask the user to add a new joke or insult to the database
-	for {
-		// The main menu of the application
-		showMainMenu()
+	// Handle subcommands
+	switch {
+	case *server:
+		startHTTPServer(*cmdPort)
+	case *cmdGetJokeList:
+		displayAllJokes()
+	case *cmdGetInsultList:
+		displayAllInsults()
+	case *cmdGetJokeById > 0:
+		joke, err := getJokeById(int64(*cmdGetJokeById))
+		if err != nil {
+			log.Fatalf("Could not retrieve joke: %v", err)
+		}
+		fmt.Printf("Joke ID: %d, Answer: %s, Question: %s\n", joke.ID, joke.Answer, joke.Question)
+	case *cmdGetInsultById > 0:
+		insult, err := getInsultsById(int64(*cmdGetInsultById))
+		if err != nil {
+			log.Fatalf("Could not retrieve insult: %v", err)
+		}
+		fmt.Printf("Insult ID: %d, Insult: %s\n", insult.ID, insult.Insult)
+	case *cmdExport != "":
+		cfg := mysql.NewConfig()
+		cfg.User = os.Getenv("DBUSER")
+		cfg.Passwd = os.Getenv("DBPASS")
+		cfg.Net = "tcp"
+		cfg.Addr = *cmdDbHost
+		cfg.DBName = "Carnac"
+		
+		if cfg.User == "" || cfg.Passwd == "" {
+			log.Fatal("DBUSER and DBPASS are not set")
+		}
+		if err := export_to_json(cfg.FormatDSN(), *cmdExport); err != nil {
+			log.Fatalf("Error exporting database to JSON: %v", err)
+		}
+		fmt.Printf("Database successfully exported to %s\n", *cmdExport)
+	case *cmdInteractive:
+		interactiveMenu()
+	default:
+		fmt.Println("Carnac Database Management")
+		fmt.Println("\nUsage:")
+		flag.PrintDefaults()
+	}
+}
 
+func interactiveMenu() {
+	for {
+		showMainMenu()
 		choice := getUserChoice()
 
 		switch choice {
-		case *cmdServer:
-			startHTTPServer(*cmdPort)
-		case *listJokes:
+		case 1:
+			findJokeById()
+		case 2:
 			findInsultById()
 		case 3:
 			addNewJoke()
@@ -83,12 +126,12 @@ func main() {
 		case 6:
 			displayAllJokes()
 		case 7:
-			handleExportCommand("carnac_export.json")
+			fmt.Println("Use --export flag in CLI mode")
 		case 8:
-			fmt.Println("Program is currently exiting...")
+			fmt.Println("Exiting...")
 			return
 		default:
-			fmt.Println("Invalid input, please enter either (1-7).")
+			fmt.Println("Invalid choice, please try again.")
 			continue
 		}
 	}
@@ -98,11 +141,27 @@ func startHTTPServer(port string) {
 	http.HandleFunc("/joke", jokeHandler)
 	http.HandleFunc("/insult", insultHandler)
 	http.HandleFunc("/export", exportHandler)
+	http.HandleFunc("/status", statusHandler)
+	http.HandleFunc("/ready", readyHandler)
 
 	fmt.Printf("Starting server on port %s...\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatalf("Could not start server: %v", err)
 	}
+}
+
+func readyHandler(w http.ResponseWriter, r *http.Request) {
+	if err := db.Ping(); err != nil {
+		http.Error(w, "Database not ready", http.StatusServiceUnavailable)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Ready"))
+}
+
+func statusHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
 }
 
 func jokeHandler(w http.ResponseWriter, r *http.Request) {
