@@ -44,8 +44,8 @@ func main() {
 	// Subcommand flag definitions
 	cmdGetInsultById := flag.Int64("insult-id", 0, "Find an insult by ID")
 	cmdGetJokeById := flag.Int64("joke-id", 0, "Find a joke by ID")
-	cmdGetJokeList := flag.Bool("List-jokes", false, "List all jokes")
-	cmdGetInsultList := flag.Bool("List-insults", false, "List all insults")
+	cmdGetJokeList := flag.Bool("list-jokes", false, "List all jokes")
+	cmdGetInsultList := flag.Bool("list-insults", false, "List all insults")
 	cmdExport := flag.String("export", "", "Export the database to a JSON file")
 	cmdInteractive := flag.Bool("interactive", false, "Run in interactive mode")
 	cmdServer := flag.Bool("server", false, "Run as a web server")
