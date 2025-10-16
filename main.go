@@ -204,7 +204,7 @@ func jokeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleExportCommand handles the export command to export the database to a JSON file
-func handleExportCommand(output string) {
+/*func handleExportCommand(output string) {
 	cfg := mysql.NewConfig()
 	cfg.User = os.Getenv("DBUSER")
 	cfg.Passwd = os.Getenv("DBPASS")
@@ -218,7 +218,7 @@ func handleExportCommand(output string) {
 	} else {
 		fmt.Printf("Database successfully exported %s\n", output)
 	}
-}
+}*/
 
 // insultHandler handles HTTP requests for insults
 func insultHandler(w http.ResponseWriter, r *http.Request) {
