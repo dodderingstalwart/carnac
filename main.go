@@ -203,23 +203,6 @@ func jokeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleExportCommand handles the export command to export the database to a JSON file
-/*func handleExportCommand(output string) {
-	cfg := mysql.NewConfig()
-	cfg.User = os.Getenv("DBUSER")
-	cfg.Passwd = os.Getenv("DBPASS")
-
-	if cfg.User == "" || cfg.Passwd == "" {
-		log.Fatal("DBUSER and DBPASS are not set")
-	}
-
-	if err := exportToJSON(cfg.FormatDSN(), output); err != nil {
-		log.Fatalf("Error exporting database to JSON: %v", err)
-	} else {
-		fmt.Printf("Database successfully exported %s\n", output)
-	}
-}*/
-
 // insultHandler handles HTTP requests for insults
 func insultHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
