@@ -28,6 +28,23 @@ An opensource Go application to input Carnac jokes and/or insults and store them
    ```
    CREATE DATABASE carnac
    ```
+4. Setup your env variables
+   ```
+   DBHOST="Your hostname"
+   DBUSER="Your username"
+   DBPASS="Your password"
+   DBNAME="carnac"
+   DBPORT=5432
+   ```
+5. Build and run the application
+   ```
+   go build -o carnac
+   ./carnac
+   ```
+   or run without building
+   ```
+   go run main.go
+   ```
 
 
 # Roadmap
