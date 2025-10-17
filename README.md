@@ -6,6 +6,13 @@ An opensource Go application to input Carnac jokes and/or insults and store them
 * Displays all the jokes and insults to the user
 
 # Installation
+## Prerequisites
+* Go version 1.21 or higher
+* Git
+* SQL database like
+    * Mariadb or MySQL 8.0 or higher
+    * SQLite 3
+    * Postgresql 12.0 or higher
 
 
 # Roadmap
