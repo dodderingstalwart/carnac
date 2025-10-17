@@ -12,7 +12,7 @@ An opensource Go application to input Carnac jokes and/or insults and store them
 * SQL database like
     * Mariadb or MySQL 8.0 or higher
     * SQLite 3
-    * Postgresql 12.0 or higher
+    * PostgreSQL 12.0 or higher
 
 
 # Roadmap
