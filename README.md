@@ -13,6 +13,12 @@ An opensource Go application to input Carnac jokes and/or insults and store them
     * Mariadb or MySQL 8.0 or higher
     * SQLite 3
     * PostgreSQL 12.0 or higher
+ 
+# Getting Started
+1. Clone the repository:
+   '''
+   git clone https://github.com/dodderingstalwart/carnac.git
+   '''
 
 
 # Roadmap
