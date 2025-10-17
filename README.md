@@ -20,6 +20,14 @@ An opensource Go application to input Carnac jokes and/or insults and store them
    git clone https://github.com/dodderingstalwart/carnac.git
    cd carnac
    ```
+2. Install the dependencies:
+   ```
+   go mod download
+   ```
+3. Create the database for the application:
+   ```
+   CREATE DATABASE carnac
+   ```
 
 
 # Roadmap
