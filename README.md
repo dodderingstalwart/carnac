@@ -46,6 +46,10 @@ An opensource Go application to input Carnac jokes and/or insults and store them
    go run main.go
    ```
 # Usage
+A list of commands:
+```
+./carnac --help
+```
 
 # Roadmap
 * Put the data into a bucket on a selected cloud provider.
