@@ -15,9 +15,10 @@ An opensource Go application to input Carnac jokes and/or insults and store them
     * PostgreSQL 12.0 or higher
  
 # Getting Started
-1. Clone the repository:
+1. Clone the repository and change into the directory:
    ```
    git clone https://github.com/dodderingstalwart/carnac.git
+   cd carnac
    ```
 
 
