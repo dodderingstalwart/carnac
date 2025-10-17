@@ -10,7 +10,7 @@ An opensource Go application to input Carnac jokes and/or insults and store them
 * Go version 1.21 or higher
 * Git
 * SQL database like
-    * Mariadb or MySQL 8.0 or higher
+    * Mariadb/MySQL 8.0 or higher
     * SQLite 3
     * PostgreSQL 12.0 or higher
  
