@@ -50,6 +50,24 @@ A list of commands:
 ```
 ./carnac --help
 ```
+```
+-export string
+        Export the database to a JSON file
+  -insult-id int
+        Find an insult by ID
+  -interactive
+        Run in interactive mode
+  -joke-id int
+        Find a joke by ID
+  -list-insults
+        List all insults
+  -list-jokes
+        List all jokes
+  -port string
+        Port to run the web server on (default "8080")
+  -server
+        Run as a web server
+```
 
 # Roadmap
 * Put the data into a bucket on a selected cloud provider.
