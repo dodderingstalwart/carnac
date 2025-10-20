@@ -1,10 +1,7 @@
 DROP TABLE IF EXISTS Insults; 
-CREATE TABLE Insults (ID int NOT NULL AUTO_INCREMENT, 
-                      Insult varchar(255) NOT NULL DISTINCT,
-                      PRIMARY KEY (ID) 
-);
-CREATE TABLE Jokes (ID int NOT NULL AUTO_INCREMENT,
+CREATE TABLE Insults (ID INTEGER PRIMARY KEY, 
+                      Insult varchar(255) NOT NULL);
+
+CREATE TABLE Jokes (ID INTEGER PRIMARY KEY,
                     Answer varchar(255) NOT NULL,
-                    Question varchar(255) NOT NULL,
-                    PRIMARY KEY (ID)
-);
+                    Question varchar(255) NOT NULL);
