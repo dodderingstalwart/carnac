@@ -21,7 +21,7 @@ RUN go build -o carnac .
 FROM alpine:latest
 
 # Install necessary runtime dependencies
-RUN apk add --no-cache add ca-certificates mysql-client
+RUN apk --no-cache add ca-certificates mysql-client
 
 # Create a non-root user to run the application
 RUN addgroup -g 1000 carnac && \
