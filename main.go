@@ -88,7 +88,7 @@ func main() {
 		cfg.Passwd = os.Getenv("DBPASS")
 		cfg.Net = "tcp"
 		cfg.Addr = *cmdDbHost
-		cfg.DBName = "Carnac"
+		cfg.DBName = "carnac"
 
 		if cfg.User == "" || cfg.Passwd == "" {
 			log.Fatal("DBUSER and DBPASS are not set")
