@@ -49,8 +49,8 @@ ENV DBUSER="root" \
 
 # Health check to ensure the application is running
 # Comment out if HEALTHCHECK is not supported 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/status || exit 1
+#HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+#    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/status || exit 1
 
 # Run the application in server mode
 CMD ["./carnac", "--server", "--port", "8080"]
