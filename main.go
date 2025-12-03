@@ -282,7 +282,7 @@ func initDB() error {
 	cfg.Passwd = os.Getenv("DBPASS")
 	// Check if DBUSER and DBPASS environment variables are set
 	if cfg.User == "" || cfg.Passwd == "" {
-		log.Fatal("Environment variables DBUSER and DBPASS are not set")
+		log.Fatal("Environment variables DBUSER and DBPASS are not set.")
 	}
 
 	// Configure the database connection (adjust as needed)
