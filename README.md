@@ -72,3 +72,4 @@ A list of commands:
 # Roadmap
 * Input the database to an LLVM in order to create modern Carnac jokes and/or insults.
 * That will create new Carnac jokes based on current events.
+* Added it to my website for random jokes/insults.
