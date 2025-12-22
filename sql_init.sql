@@ -9,4 +9,3 @@ CREATE TABLE Jokes (ID int NOT NULL AUTO_INCREMENT,
                     Question varchar(255) NOT NULL,
                     PRIMARY KEY (ID)
 );
-DROP TABLE IF EXISTS Jokes;
