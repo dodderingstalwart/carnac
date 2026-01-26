@@ -66,7 +66,22 @@ A list of commands:
   -server
         Run as a web server
 ```
-
+# Schema
+## Insults
+```
+CREATE TABLE Insults (ID int NOT NULL AUTO_INCREMENT,
+                      insult varchar(255) NOT NULL,
+                      PRIMARY KEY (ID)
+);
+```
+## Jokes
+```
+CREATE TABLE Jokes (ID int NOT NULL AUTO_INCREMENT,
+                    Answer varchar(255) NOT NULL,
+                    Question varchar(255) NOT NULL,
+                    PRIMARY KEY (ID)
+);
+```
 # Roadmap
 * Input the database to an LLVM in order to create modern Carnac jokes and/or insults.
 * Added it to my website for random jokes/insults.
