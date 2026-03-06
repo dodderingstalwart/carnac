@@ -40,8 +40,8 @@ USER carnac
 EXPOSE 8080
 
 # Environment variables
-ENV DBUSER="root" \
-    DBPASSWORD="" \
+ENV DBUSER="user" \
+    DBPASSWORD="dbpassword" \
     DBHOST="localhost" \
     DBPORT="3306" \
     DBNAME="carnac" \
