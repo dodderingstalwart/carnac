@@ -171,7 +171,7 @@ func jokeHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		idParam := r.URL.Query().Get("id")
-		if idParam == "" {
+		if idParam != "" {
 			id, err := strconv.ParseInt(idParam, 10, 64)
 			if err != nil {
 				http.Error(w, "Invalid 'id' parameter", http.StatusBadRequest)
