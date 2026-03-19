@@ -14,19 +14,20 @@ import (
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
+	"github.com/gorilla/mux"
 )
 
 // Insults represents an insult with an ID and the insult text
 type Insults struct {
-	ID     int64
-	Insult string
+	ID     int64  `json:"id"`
+	Insult string `json:"insult"`
 }
 
 // Jokes represents a joke with an ID, answer, and question
 type Jokes struct {
-	ID       int64
-	Answer   string
-	Question string
+	ID       int64  `json:"id"`
+	Answer   string `json:"answer"`
+	Question string `json:"question"`
 }
 
 type CarnacEntry struct {
@@ -34,6 +35,10 @@ type CarnacEntry struct {
 	Answer   string `json:"answer,omitempty"`
 	Question string `json:"question,omitempty"`
 	Insult   string `json:"insult,omitempty"`
+}
+
+type ErrorResponse struct {
+	Error string `json:"error"`
 }
 
 // db is a pointer to the sql database
@@ -138,17 +143,247 @@ func interactiveMenu() {
 
 // startHTTPServer starts an HTTP server with various endpoints
 func startHTTPServer(port string) {
-	http.HandleFunc("/joke", jokeHandler)
-	http.HandleFunc("/insult", insultHandler)
-	http.HandleFunc("/export", exportHandler)
-	http.HandleFunc("/status", statusHandler)
-	http.HandleFunc("/ready", readyHandler)
+	r := mux.NewRouter()
+
+	// Enable CORS for all routes
+	r.Use(corsMiddleware)
+
+	// Legacy endpoints
+	r.HandleFunc("/joke", jokeHandler)
+	r.HandleFunc("/insult", insultHandler)
+	r.HandleFunc("/export", exportHandler)
+	r.HandleFunc("/status", statusHandler)
+	r.HandleFunc("/ready", readyHandler)
+
+	// Rest API endpoints
+	api := r.PathPrefix("/api").Subrouter()
+
+	//Health check endpoints
+	api.HandleFunc("/health", healthCheckHandler).Methods("GET", "OPTIONS")
+
+	// Jokes endpoints
+	api.HandleFunc("/jokes", listJokesHandler).Methods("GET", "OPTIONS")
+	api.HandleFunc("/jokes", createJokeHandler).Methods("POST", "OPTIONS")
+	api.HandleFunc("/jokes/random", randomJokeHandler).Methods("GET", "OPTIONS")
+	api.HandleFunc("/jokes/{id:[0-9]+}", getJokeByIdHandler).Methods("GET", "OPTIONS")
+
+	//Insults endpoints
+	api.HandleFunc("/insults", listInsultsHandler).Methods("GET", "OPTIONS")
+	api.HandleFunc("/insults", createInsultsHandler).Methods("POST", "OPTIONS")
+	api.HandleFunc("/insults/random", randomInsultsHandler).Methods("GET", "OPTIONS")
+	api.HandleFunc("/insults/{id:[0-9]+}", getInsultsByIdHandler).Methods("GET", "OPTIONS")
 
 	fmt.Printf("Starting server on port %s...\n", port)
+	fmt.Printf("Legacy endpoints: http://localhost:%s/joke, /insult, /export\n", port)
+	fmt.Printf("API endpoints: http://localhost:%s/api/jokes, /api/insults\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatalf("Could not start server: %v", err)
 	}
 }
+
+// CORS middleware to allow cross-origin requests
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Handle preflight requests
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+
+}
+
+// =================
+// REST API Handlers
+// =================
+
+// healthCheckHandler checks if the server is running
+func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	if err := db.Ping(); err != nil {
+		respondError(w, http.StatusServiceUnavailable, "Database not healthy")
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]string{
+		"status":   "healthy",
+		"database": "connected",
+	})
+}
+
+// listJokesHandler lists all jokes in the database
+func listJokesHandler(w http.ResponseWriter, r *http.Request) {
+	jokes, err := getJokes(db)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve jokes")
+		return
+	}
+	respondJSON(w, http.StatusOK, jokes)
+}
+
+// randomJokeHandler returns a random joke from the database
+func randomJokeHandler(w http.ResponseWriter, r *http.Request) {
+	var joke Jokes
+	err := db.QueryRow("SELECT id, answer, question FROM Jokes ORDER BY RAND() LIMIT 1").Scan(&joke.ID, &joke.Answer, &joke.Question)
+
+	if err == sql.ErrNoRows {
+		respondError(w, http.StatusNotFound, "No jokes found")
+		return
+	}
+
+	if err != nil {
+		log.Printf("Error retrieving random joke: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to retrieve random joke")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, joke)
+}
+
+// getJokeByIdHandler retrieves a joke by its ID from the database
+func getJokeByIdHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid joke ID")
+		return
+	}
+
+	joke, err := getJokeById(id)
+	if err == sql.ErrNoRows {
+		respondError(w, http.StatusNotFound, "Joke not found")
+		return
+	}
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to fetch joke")
+		return
+	}
+	respondJSON(w, http.StatusOK, joke)
+}
+
+// createJokeHandler creates a new joke in the database
+func createJokeHandler(w http.ResponseWriter, r *http.Request) {
+	var jok Jokes
+	if err := json.NewDecoder(r.Body).Decode(&jok); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	if jok.Answer == "" || jok.Question == "" {
+		respondError(w, http.StatusBadRequest, "Both answer and question are required")
+		return
+	}
+
+	id, err := addJoke(joke)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to create joke")
+		return
+	}
+
+	joke.ID = id
+	respondJSON(w, http.StatusCreated, joke)
+}
+
+// listInsultsHandler lists all insults in the database
+func listInsultsHandler(w http.ResponseWriter, r *http.Request) {
+	insults, err := getInsults(db)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to fetch insults")
+		return
+	}
+	respondJSON(w, http.StatusOK, insults)
+}
+
+// randomInsultsHandler returns a random insult from the database
+func randomInsultsHandler(w http.ResponseWriter, r *http.Request) {
+	var insult Insults
+	err := db.QueryRow("SELECT id, insult FROM Insults ORDER BY RAND() LIMIT 1").Scan(&insult.ID, &insult.Insult)
+
+	if err == sql.ErrNoRows {
+		respondError(w, http.StatusNotFound, "No insults found")
+		return
+	}
+
+	if err != nil {
+		log.Printf("Error retrieving random insult: %v", err)
+		respondError(w, http.StatusInternalServerError, "Failed to fetch random insult")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, insult)
+}
+
+// getInsultsByIdHandler retrieves an insult by its ID from the database
+func getInsultsByIdHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid insult ID")
+		return
+	}
+
+	insult, err := getInsultsById(id)
+	if err == sql.ErrNoRows {
+		respondError(w, http.StatusNotFound, "Insult not found")
+		return
+	}
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to fetch insult")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, insult)
+}
+
+// createInsultsHandler creates a new insult in the database
+func createInsultsHandler(w http.ResponseWriter, r *http.Request) {
+	var ins Insults
+	if err := json.NewDecoder(r.Body).Decode(&ins); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	if ins.Insult == "" {
+		respondError(w, http.StatusBadRequest, "Insult text is required")
+		return
+	}
+
+	id, err := addInsult(ins)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to create insult")
+		return
+	}
+
+	ins.ID = id
+	respondJSON(w, http.StatusCreated, ins)
+}
+
+// respondJSON sends a JSON response with the given status code and data
+func respondJSON(w http.ResponseWriter, status int, data interface{}) {
+	response, err := json.Marshal(payload)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error": "Internal server error"}`))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	w.Write(response)
+}
+
+// redpondError sends a JSON error response with the given status code and message
+func respondError(w http.ResponseWriter, status int, message string) {
+	respondJSON(w, status, ErrorResponse{Error: message})
+}
+
+// ---------------
+// Legacy Handlers
+// ---------------
 
 // readyHandler checks if the database connection is alive
 func readyHandler(w http.ResponseWriter, r *http.Request) {
@@ -184,6 +419,15 @@ func jokeHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(joke)
+		} else {
+			// Return all jokes if no ID is provided
+			jokes, err := getJokes(db)
+			if err != nil {
+				http.Error(w, "Could not retrieve jokes", http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(jokes)
 		}
 	case "POST":
 		var jok Jokes
@@ -274,6 +518,10 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(entries)
 }
 
+// =================
+// Database Functions
+// =================
+
 // initDB initializes the database connection
 func initDB() error {
 	// Connecting to the sql database
@@ -287,6 +535,7 @@ func initDB() error {
 
 	// Configure the database connection (adjust as needed)
 	cfg.Net = "tcp"
+	cfg.Addr = "localhost:3306" // Default MySQL port can override
 	cfg.DBName = "Carnac"
 
 	// Get a database handle
