@@ -267,13 +267,13 @@ func getJokeByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 // createJokeHandler creates a new joke in the database
 func createJokeHandler(w http.ResponseWriter, r *http.Request) {
-	var jok Jokes
-	if err := json.NewDecoder(r.Body).Decode(&jok); err != nil {
+	var joke Jokes
+	if err := json.NewDecoder(r.Body).Decode(&joke); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
-	if jok.Answer == "" || jok.Question == "" {
+	if joke.Answer == "" || joke.Question == "" {
 		respondError(w, http.StatusBadRequest, "Both answer and question are required")
 		return
 	}
@@ -363,7 +363,7 @@ func createInsultsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // respondJSON sends a JSON response with the given status code and data
-func respondJSON(w http.ResponseWriter, status int, data interface{}) {
+func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
 	response, err := json.Marshal(payload)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
