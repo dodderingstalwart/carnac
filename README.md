@@ -4,6 +4,7 @@ An opensource Go application to input Carnac jokes and/or insults and store them
 * Creates an SQL database for jokes and insults
 * Gets user input to add jokes and insults
 * Displays all the jokes and insults to the user
+* REST API to attach to my website
 
 # Installation
 ## Prerequisites
