@@ -176,7 +176,7 @@ func startHTTPServer(port string) {
 	fmt.Printf("Starting server on port %s...\n", port)
 	fmt.Printf("Legacy endpoints: http://localhost:%s/joke, /insult, /export\n", port)
 	fmt.Printf("API endpoints: http://localhost:%s/api/jokes, /api/insults\n", port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	if err := http.ListenAndServe(":"+port, r); err != nil {
 		log.Fatalf("Could not start server: %v", err)
 	}
 }
@@ -452,7 +452,7 @@ func insultHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		idParam := r.URL.Query().Get("id")
-		if idParam == "" {
+		if idParam != "" {
 			id, err := strconv.ParseInt(idParam, 10, 64)
 			if err != nil {
 				http.Error(w, "Invalid 'id' parameter", http.StatusBadRequest)
