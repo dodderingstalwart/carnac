@@ -829,7 +829,7 @@ func exportInteractive() {
 }
 
 // exportToJSON exports all jokes and insults from the database to a JSON file
-func exportToJSON(dbString string, output string) error {
+func exportToJSON(output string) error {
 	var entries []CarnacEntry
 
 	// Fetch jokes
