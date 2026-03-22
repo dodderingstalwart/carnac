@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -56,7 +55,6 @@ func main() {
 	cmdInteractive := flag.Bool("interactive", false, "Run in interactive mode")
 	cmdServer := flag.Bool("server", false, "Run as a web server")
 	cmdPort := flag.String("port", "8080", "Port to run the web server on")
-	cmdDbHost := flag.String("dbhost", "localhost:3306", "Database host address")
 
 	flag.Parse()
 
@@ -89,17 +87,7 @@ func main() {
 		}
 		fmt.Printf("Insult ID: %d, Insult: %s\n", insult.ID, insult.Insult)
 	case *cmdExport != "":
-		cfg := mysql.NewConfig()
-		cfg.User = os.Getenv("DBUSER")
-		cfg.Passwd = os.Getenv("DBPASS")
-		cfg.Net = "tcp"
-		cfg.Addr = *cmdDbHost
-		cfg.DBName = "carnac"
-
-		if cfg.User == "" || cfg.Passwd == "" {
-			log.Fatal("DBUSER and DBPASS are not set")
-		}
-		if err := exportToJSON(cfg.FormatDSN(), *cmdExport); err != nil {
+		if err := exportToJSON(*cmdExport); err != nil {
 			log.Fatalf("Error exporting database to JSON: %v", err)
 		}
 		fmt.Printf("Database successfully exported to %s\n", *cmdExport)
@@ -131,7 +119,7 @@ func interactiveMenu() {
 		case 6:
 			displayAllJokes()
 		case 7:
-			//export_to_json()
+			exportInteractive()
 		case 8:
 			fmt.Println("Exiting...")
 			return
@@ -177,6 +165,8 @@ func startHTTPServer(port string) {
 	fmt.Printf("Starting server on port %s...\n", port)
 	fmt.Printf("Legacy endpoints: http://localhost:%s/joke, /insult, /export\n", port)
 	fmt.Printf("API endpoints: http://localhost:%s/api/jokes, /api/insults\n", port)
+
+	// Start the HTTP server
 	if err := http.ListenAndServe(":"+port, r); err != nil {
 		log.Fatalf("Could not start server: %v", err)
 	}
@@ -197,7 +187,6 @@ func corsMiddleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
-
 }
 
 // =================
@@ -231,6 +220,7 @@ func randomJokeHandler(w http.ResponseWriter, r *http.Request) {
 	var joke Jokes
 	err := db.QueryRow("SELECT id, answer, question FROM Jokes ORDER BY RAND() LIMIT 1").Scan(&joke.ID, &joke.Answer, &joke.Question)
 
+	// Check if no jokes are found
 	if err == sql.ErrNoRows {
 		respondError(w, http.StatusNotFound, "No jokes found")
 		return
@@ -304,6 +294,7 @@ func randomInsultsHandler(w http.ResponseWriter, r *http.Request) {
 	var insult Insults
 	err := db.QueryRow("SELECT id, insult FROM Insults ORDER BY RAND() LIMIT 1").Scan(&insult.ID, &insult.Insult)
 
+	// Check if no insults are found
 	if err == sql.ErrNoRows {
 		respondError(w, http.StatusNotFound, "No insults found")
 		return
@@ -464,6 +455,7 @@ func insultHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Insult not found", http.StatusNotFound)
 				return
 			}
+			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(insult)
 		} else {
 			insults, err := getInsults(db)
@@ -523,68 +515,7 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 // Database Functions
 // =================
 
-// initDB initializes the database connection
-/*func initDB() error {
-	var err error
-
-	// Check database type from environment variable
-	dbType := os.Getenv("DBTYPE")
-
-	switch dbType {
-	case "sqlite":
-		dbPath := os.Getenv("DBPATH")
-		if dbPath == "" {
-			dbPath = "/data/carnac.db" // Default path for SQLite
-		}
-
-		db, err = sql.Open("sqlite3", dbPath)
-		if err != nil {
-			return fmt.Errorf("failed to open SQLite database: %v", err)
-		}
-
-		// Create tables if they don't exist
-		if err := createTables(); err != nil {
-			return err
-		}
-
-	case "mysql":
-		// MySQL connection configuration
-		cfg := mysql.NewConfig()
-		cfg.User = os.Getenv("DBUSER")
-		cfg.Passwd = os.Getenv("DBPASS")
-
-		if cfg.User == "" || cfg.Passwd == "" {
-			return fmt.Errorf("DBUSER and DBPASS environment variables must be set for MySQL")
-		}
-
-		cfg.Net = "tcp"
-		cfg.Addr = os.Getenv("DBHOST") // Use DBHOST environment variable for MySQL host
-		if cfg.Addr == "" {
-			cfg.Addr = "localhost:3306" // Default MySQL address
-		}
-		cfg.DBName = "carnac"
-
-		db, err = sql.Open("mysql", cfg.FormatDSN())
-		if err != nil {
-			return fmt.Errorf("failed to open MySQL database: %v", err)
-		}
-
-		if err := db.Ping(); err != nil {
-			return fmt.Errorf("failed to connect to MySQL database: %v", err)
-		}
-
-	default:
-		return fmt.Errorf("unsupported DBTYPE: %s. Use 'sqlite' or 'mysql'", dbType)
-	}
-
-	if err := db.Ping(); err != nil {
-		return fmt.Errorf("database connection failed: %v", err)
-	}
-
-	log.Printf("Successfully connected to %s database:", dbType)
-	return nil
-}*/
-
+// initDB initializes the database connection and creates tables if they do not exist
 func initDB() error {
 	var err error
 
@@ -625,15 +556,13 @@ func initDB() error {
 // createTables creates the necessary tables in the database if they do not already exist
 func createTables() error {
 	// Create Jokes table
-
 	_, err := db.Exec(`
 	    CREATE TABLE IF NOT EXISTS Jokes (
 		    id INTEGER PRIMARY KEY AUTOINCREMENT,
 			answer TEXT NOT NULL,
 			question TEXT NOT NULL
 		)
-	
-		`)
+	`)
 	if err != nil {
 		return fmt.Errorf("failed to create Jokes table: %v", err)
 	}
@@ -644,9 +573,7 @@ func createTables() error {
 		    id INTEGER PRIMARY KEY AUTOINCREMENT,
 			insult TEXT NOT NULL
 		)
-	
 	`)
-
 	if err != nil {
 		return fmt.Errorf("failed to create Insults table: %v", err)
 	}
@@ -721,9 +648,6 @@ func getInsultsById(id int64) (Insults, error) {
 
 	row := db.QueryRow("SELECT * FROM Insults WHERE id = ?", id)
 	if err := row.Scan(&ins.ID, &ins.Insult); err != nil {
-		if err == sql.ErrNoRows {
-			return ins, err
-		}
 		return ins, err
 	}
 	return ins, nil
@@ -758,9 +682,6 @@ func getJokeById(id int64) (Jokes, error) {
 
 	row := db.QueryRow("SELECT * FROM Jokes WHERE id = ?", id)
 	if err := row.Scan(&jok.ID, &jok.Answer, &jok.Question); err != nil {
-		if err == sql.ErrNoRows {
-			return jok, err
-		}
 		return jok, err
 	}
 	return jok, nil
@@ -888,18 +809,31 @@ func showMainMenu() {
 	fmt.Println("8. Exit")
 }
 
-func exportToJSON(dbString string, output string) error {
-	// Connect to the database
-	db, err := sql.Open("mysql", dbString)
-	if err != nil {
-		return fmt.Errorf("could not connect to the database: %v", err)
-	}
-	defer db.Close()
+// exportInteractive prompts the user to enter a filename and exports the database to that file in JSON format
+func exportInteractive() {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter the filename to export to (e.g., export.json): ")
+	filename, _ := reader.ReadString('\n')
+	filename = strings.TrimSpace(filename)
 
+	if filename == "" {
+		filename = "carnac_export.json"
+	}
+
+	if err := exportToJSON("", filename); err != nil {
+		fmt.Printf("Error exporting: %v\n", err)
+		return
+	}
+
+	fmt.Printf("Database successfully exported to %s\n", filename)
+}
+
+// exportToJSON exports all jokes and insults from the database to a JSON file
+func exportToJSON(dbString string, output string) error {
 	var entries []CarnacEntry
 
 	// Fetch jokes
-	jokes, err := db.Query("SELECT answer, question FROM Jokes")
+	jokes, err := db.Query("SELECT id, answer, question FROM jokes")
 	if err != nil {
 		return fmt.Errorf("could not fetch jokes: %v", err)
 	}
@@ -907,15 +841,15 @@ func exportToJSON(dbString string, output string) error {
 
 	for jokes.Next() {
 		var entry CarnacEntry
-		err = jokes.Scan(&entry.Answer, &entry.Question)
+		err = jokes.Scan(&entry.ID, &entry.Answer, &entry.Question)
 		if err != nil {
-			return fmt.Errorf("could not scan joke: %v", err)
+			return fmt.Errorf("error scanning joke: %v", err)
 		}
 		entries = append(entries, entry)
 	}
 
 	// Fetch insults
-	insults, err := db.Query("SELECT insult FROM Insults")
+	insults, err := db.Query("SELECT id, insult FROM insults")
 	if err != nil {
 		return fmt.Errorf("could not fetch insults: %v", err)
 	}
@@ -923,17 +857,17 @@ func exportToJSON(dbString string, output string) error {
 
 	for insults.Next() {
 		var entry CarnacEntry
-		err = insults.Scan(&entry.Insult)
+		err = insults.Scan(&entry.ID, &entry.Insult)
 		if err != nil {
-			return fmt.Errorf("could not scan insult: %v", err)
+			return fmt.Errorf("error scanning insult: %v", err)
 		}
 		entries = append(entries, entry)
 	}
 
-	// Converting to JSON and writing to file
+	// Convert to JSON and write to file
 	file, err := os.Create(output)
 	if err != nil {
-		return fmt.Errorf("could not create output file: %v", err)
+		return fmt.Errorf("could not create file: %v", err)
 	}
 	defer file.Close()
 
