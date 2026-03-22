@@ -522,8 +522,8 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 // Database Functions
 // =================
 
-// initDB initializes the database connection
-func initDB() error {
+// initDB mysql initializes the database connection
+/*func initDB() error {
 	// Connecting to the sql database
 	cfg := mysql.NewConfig()
 	cfg.User = os.Getenv("DBUSER")
@@ -549,8 +549,104 @@ func initDB() error {
 		return err
 	}
 	return nil
+}*/
+
+// initDB initializes the database connection
+func initDB() error {
+	var err error
+
+	// Check database type from environment variable
+	dbType := os.Getenv("DBTYPE")
+
+	switch dbType {
+	case "sqlite":
+		dbPath := os.Getenv("DBPATH")
+		if dbPath == "" {
+			dbPath = "/data/carnac.db" // Default path for SQLite
+		}
+
+		db, err = sql.Open("sqlite3", dbPath)
+		if err != nil {
+			return fmt.Errorf("failed to open SQLite database: %v", err)
+		}
+
+		// Create tables if they don't exist
+		if err := createTables(); err != nil {
+			return err
+		}
+
+	case "mysql":
+		// MySQL connection configuration
+		cfg := mysql.NewConfig()
+		cfg.User = os.Getenv("DBUSER")
+		cfg.Passwd = os.Getenv("DBPASS")
+
+		if cfg.User == "" || cfg.Passwd == "" {
+			return fmt.Errorf("DBUSER and DBPASS environment variables must be set for MySQL")
+		}
+
+		cfg.Net = "tcp"
+		cfg.Addr = os.Getenv("DBHOST") // Use DBHOST environment variable for MySQL host
+		if cfg.Addr == "" {
+			cfg.Addr = "localhost:3306" // Default MySQL address
+		}
+		cfg.DBName = "carnac"
+
+		db, err = sql.Open("mysql", cfg.FormatDSN())
+		if err != nil {
+			return fmt.Errorf("failed to open MySQL database: %v", err)
+		}
+
+		if err := db.Ping(); err != nil {
+			return fmt.Errorf("failed to connect to MySQL database: %v", err)
+		}
+
+	default:
+		return fmt.Errorf("unsupported DBTYPE: %s. Use 'sqlite' or 'mysql'", dbType)
+	}
+
+	if err := db.Ping(); err != nil {
+		return fmt.Errorf("database connection failed: %v", err)
+	}
+
+	log.Printf("Successfully connected to %s database:", dbType)
+	return nil
 }
 
+// createTables creates the necessary tables in the database if they do not already exist
+func createTables() error {
+	// Create Jokes table
+
+	_, err := db.Exec(`
+	    CREATE TABLE IF NOT EXISTS Jokes (
+		    id INTEGER PRIMARY KEY AUTOINCREMENT,
+			answer TEXT NOT NULL,
+			question TEXT NOT NULL
+		)
+	
+		`)
+	if err != nil {
+		return fmt.Errorf("failed to create Jokes table: %v", err)
+	}
+
+	// Create Insults table
+	_, err = db.Exec(`
+	    CREATE TABLE IF NOT EXISTS Insults (
+		    id INTEGER PRIMARY KEY AUTOINCREMENT,
+			insult TEXT NOT NULL
+		)
+	
+	`)
+
+	if err != nil {
+		return fmt.Errorf("failed to create Insults table: %v", err)
+	}
+
+	log.Println("Database tabled created/verified")
+	return nil
+}
+
+// getUserChoice prompts the user to enter a choice and returns it as an integer
 func getUserChoice() int {
 	var choice int
 	fmt.Print("Enter your choice (1-7): ")
