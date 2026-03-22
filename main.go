@@ -523,37 +523,8 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 // Database Functions
 // =================
 
-// initDB mysql initializes the database connection
-/*func initDB() error {
-	// Connecting to the sql database
-	cfg := mysql.NewConfig()
-	cfg.User = os.Getenv("DBUSER")
-	cfg.Passwd = os.Getenv("DBPASS")
-	// Check if DBUSER and DBPASS environment variables are set
-	if cfg.User == "" || cfg.Passwd == "" {
-		log.Fatal("Environment variables DBUSER and DBPASS are not set.")
-	}
-
-	// Configure the database connection (adjust as needed)
-	cfg.Net = "tcp"
-	cfg.Addr = "localhost:3306" // Default MySQL port can override
-	cfg.DBName = "Carnac"
-
-	// Get a database handle
-	var err error
-	db, err = sql.Open("mysql", cfg.FormatDSN())
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err := db.Ping(); err != nil {
-		return err
-	}
-	return nil
-}*/
-
 // initDB initializes the database connection
-func initDB() error {
+/*func initDB() error {
 	var err error
 
 	// Check database type from environment variable
@@ -611,6 +582,43 @@ func initDB() error {
 	}
 
 	log.Printf("Successfully connected to %s database:", dbType)
+	return nil
+}*/
+
+func initDB() error {
+	var err error
+
+	// Determine database path
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		// Check if running in Fly.io (volume mounted at /data)
+		if _, err := os.Stat("/data"); err == nil {
+			dbPath = "/data/carnac.db"
+		} else {
+			// Local development
+			dbPath = "./carnac.db"
+		}
+	}
+
+	log.Printf("Using SQLite database at: %s", dbPath)
+
+	// Open SQLite database
+	db, err = sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return fmt.Errorf("failed to open SQLite database: %v", err)
+	}
+
+	// Test connection
+	if err := db.Ping(); err != nil {
+		return fmt.Errorf("failed to ping database: %v", err)
+	}
+
+	// Create tables if they don't exist
+	if err := createTables(); err != nil {
+		return err
+	}
+
+	log.Println("Successfully connected to SQLite database")
 	return nil
 }
 
