@@ -820,7 +820,7 @@ func exportInteractive() {
 		filename = "carnac_export.json"
 	}
 
-	if err := exportToJSON("", filename); err != nil {
+	if err := exportToJSON(filename); err != nil {
 		fmt.Printf("Error exporting: %v\n", err)
 		return
 	}
