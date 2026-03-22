@@ -1,56 +1,37 @@
 # Build stage
-FROM golang:1.24-alpine AS builder
+FROM golang:1.21-alpine AS builder
 
-# Install necessary build dependencies
-RUN apk add --no-cache git gcc musl-dev
+# Install build dependencies
+RUN apk add --no-cache git gcc musl-dev sqlite-dev
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the Go module files and download dependencies
+# Copy go mod files
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the rest of the application source code
+# Copy source code
 COPY . .
 
-# Build the Go application
-RUN go build -o carnac .
+# Build the application with SQLite support
+RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o carnac .
 
-# Final stage
+# Runtime stage
 FROM alpine:latest
 
-# Install necessary runtime dependencies
-RUN apk --no-cache add ca-certificates mysql-client
+# Install runtime dependencies
+RUN apk --no-cache add ca-certificates sqlite-libs
 
-# Create a non-root user to run the application
-RUN addgroup -g 1000 carnac && \
-    adduser -D -u 1000 -G carnac carnac
+WORKDIR /root/
 
-# Set the working directory inside the container
-WORKDIR /app
-
-# Copy the built application from the builder stage
+# Copy the binary from builder
 COPY --from=builder /app/carnac .
 
-# Switch to the non-root user
-USER carnac
+# Create data directory for SQLite
+RUN mkdir -p /data
 
-# Expose the application port
+# Expose port
 EXPOSE 8080
 
-# Environment variables
-ENV DBUSER=${DB_USER} \
-    DBPASSWORD=${DBPASSWD} \
-    DBHOST="localhost" \
-    DBPORT="3306" \
-    DBNAME="carnac" \
-    LOGLEVEL="info"
-
-# Health check to ensure the application is running
-# Comment out if HEALTHCHECK is not supported 
-#HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-#    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/status || exit 1
-
-# Run the application in server mode
-CMD ["./carnac", "--server", "--port", "8080"]
+# Run the application
+CMD ["./carnac", "-server", "-port", "8080"]
