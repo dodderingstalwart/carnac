@@ -1,34 +1,36 @@
-# fly.toml app configuration file
-# Generated for carnac-api
+# fly.toml app configuration file generated for carnac-api on 2026-03-21T20:30:04-07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app = "carnac-api"
-primary_region = "sjc"
+app = 'carnac-api'
+primary_region = 'sjc'
 
 [build]
 
 [env]
-  PORT = "8080"
+  PORT = '8080'
+
+[[mounts]]
+  source = 'carnac_data'
+  destination = '/data'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
-  processes = ["app"]
+  processes = ['app']
 
   [[http_service.checks]]
-    grace_period = "10s"
-    interval = "30s"
-    method = "GET"
-    timeout = "5s"
-    path = "/api/health"
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/api/health'
 
 [[vm]]
-  cpu_kind = "shared"
+  memory = '256mb'
   cpus = 1
   memory_mb = 256
-
-[mounts]
-  source = "carnac_data"
-  destination = "/data"
