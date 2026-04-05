@@ -30,6 +30,7 @@ type Jokes struct {
 	Question string `json:"question"`
 }
 
+// CarnacEntry 
 type CarnacEntry struct {
 	ID       int64  `json:"id"`
 	Answer   string `json:"answer,omitempty"`
@@ -37,6 +38,7 @@ type CarnacEntry struct {
 	Insult   string `json:"insult,omitempty"`
 }
 
+// ErrorResponse represents an error
 type ErrorResponse struct {
 	Error string `json:"error"`
 }
@@ -100,6 +102,7 @@ func main() {
 	}
 }
 
+// interactiveMenu shows the main menu
 func interactiveMenu() {
 	for {
 		showMainMenu()
