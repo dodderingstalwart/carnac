@@ -30,7 +30,7 @@ type Jokes struct {
 	Question string `json:"question"`
 }
 
-// CarnacEntry 
+// CarnacEntry
 type CarnacEntry struct {
 	ID       int64  `json:"id"`
 	Answer   string `json:"answer,omitempty"`
@@ -135,20 +135,20 @@ func interactiveMenu() {
 
 // startHTTPServer starts an HTTP server with various endpoints
 func startHTTPServer(port string) {
-	r := mux.NewRouter()
+	lr := mux.NewRouter()
 
 	// Enable CORS for all routes
-	r.Use(corsMiddleware)
+	lr.Use(corsMiddleware)
 
 	// Legacy endpoints
-	r.HandleFunc("/joke", jokeHandler)
-	r.HandleFunc("/insult", insultHandler)
-	r.HandleFunc("/export", exportHandler)
-	r.HandleFunc("/status", statusHandler)
-	r.HandleFunc("/ready", readyHandler)
+	lr.HandleFunc("/joke", jokeHandler)
+	lr.HandleFunc("/insult", insultHandler)
+	lr.HandleFunc("/export", exportHandler)
+	lr.HandleFunc("/status", statusHandler)
+	lr.HandleFunc("/ready", readyHandler)
 
 	// Rest API endpoints
-	api := r.PathPrefix("/api").Subrouter()
+	api := lr.PathPrefix("/api").Subrouter()
 
 	//Health check endpoints
 	api.HandleFunc("/health", healthCheckHandler).Methods("GET", "OPTIONS")
@@ -170,7 +170,7 @@ func startHTTPServer(port string) {
 	fmt.Printf("API endpoints: http://localhost:%s/api/jokes, /api/insults\n", port)
 
 	// Start the HTTP server
-	if err := http.ListenAndServe(":"+port, r); err != nil {
+	if err := http.ListenAndServe(":"+port, lr); err != nil {
 		log.Fatalf("Could not start server: %v", err)
 	}
 }
