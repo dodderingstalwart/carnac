@@ -168,6 +168,7 @@ func startHTTPServer(port string) {
 	fmt.Printf("Starting server on port %s...\n", port)
 	fmt.Printf("Legacy endpoints: http://localhost:%s/joke, /insult, /export\n", port)
 	fmt.Printf("API endpoints: http://localhost:%s/api/jokes, /api/insults\n", port)
+	fmt.Println("Use Ctrl+C to stop the server.")
 
 	// Start the HTTP server
 	if err := http.ListenAndServe(":"+port, lr); err != nil {
