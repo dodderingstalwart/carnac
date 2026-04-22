@@ -30,7 +30,6 @@ type Jokes struct {
 	Question string `json:"question"`
 }
 
-// CarnacEntry
 type CarnacEntry struct {
 	ID       int64  `json:"id"`
 	Answer   string `json:"answer,omitempty"`
@@ -38,7 +37,6 @@ type CarnacEntry struct {
 	Insult   string `json:"insult,omitempty"`
 }
 
-// ErrorResponse represents an error
 type ErrorResponse struct {
 	Error string `json:"error"`
 }
@@ -102,7 +100,6 @@ func main() {
 	}
 }
 
-// interactiveMenu shows the main menu
 func interactiveMenu() {
 	for {
 		showMainMenu()
@@ -155,13 +152,11 @@ func startHTTPServer(port string) {
 
 	// Jokes endpoints
 	api.HandleFunc("/jokes", listJokesHandler).Methods("GET", "OPTIONS")
-	api.HandleFunc("/jokes", createJokeHandler).Methods("POST", "OPTIONS")
 	api.HandleFunc("/jokes/random", randomJokeHandler).Methods("GET", "OPTIONS")
 	api.HandleFunc("/jokes/{id:[0-9]+}", getJokeByIdHandler).Methods("GET", "OPTIONS")
 
 	//Insults endpoints
 	api.HandleFunc("/insults", listInsultsHandler).Methods("GET", "OPTIONS")
-	api.HandleFunc("/insults", createInsultsHandler).Methods("POST", "OPTIONS")
 	api.HandleFunc("/insults/random", randomInsultsHandler).Methods("GET", "OPTIONS")
 	api.HandleFunc("/insults/{id:[0-9]+}", getInsultsByIdHandler).Methods("GET", "OPTIONS")
 
@@ -180,7 +175,7 @@ func startHTTPServer(port string) {
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
 		// Handle preflight requests
@@ -206,6 +201,7 @@ func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]string{
 		"status":   "healthy",
 		"database": "connected",
+		"mode":     "read-only",
 	})
 }
 
@@ -260,29 +256,6 @@ func getJokeByIdHandler(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, joke)
 }
 
-// createJokeHandler creates a new joke in the database
-func createJokeHandler(w http.ResponseWriter, r *http.Request) {
-	var joke Jokes
-	if err := json.NewDecoder(r.Body).Decode(&joke); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
-
-	if joke.Answer == "" || joke.Question == "" {
-		respondError(w, http.StatusBadRequest, "Both answer and question are required")
-		return
-	}
-
-	id, err := addJoke(joke)
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, "Failed to create joke")
-		return
-	}
-
-	joke.ID = id
-	respondJSON(w, http.StatusCreated, joke)
-}
-
 // listInsultsHandler lists all insults in the database
 func listInsultsHandler(w http.ResponseWriter, r *http.Request) {
 	insults, err := getInsults(db)
@@ -335,29 +308,6 @@ func getInsultsByIdHandler(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, insult)
 }
 
-// createInsultsHandler creates a new insult in the database
-func createInsultsHandler(w http.ResponseWriter, r *http.Request) {
-	var ins Insults
-	if err := json.NewDecoder(r.Body).Decode(&ins); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request payload")
-		return
-	}
-
-	if ins.Insult == "" {
-		respondError(w, http.StatusBadRequest, "Insult text is required")
-		return
-	}
-
-	id, err := addInsult(ins)
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, "Failed to create insult")
-		return
-	}
-
-	ins.ID = id
-	respondJSON(w, http.StatusCreated, ins)
-}
-
 // respondJSON sends a JSON response with the given status code and data
 func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
 	response, err := json.Marshal(payload)
@@ -399,92 +349,56 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 
 // jokeHandler handles requests related to jokes
 func jokeHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		idParam := r.URL.Query().Get("id")
-		if idParam != "" {
-			id, err := strconv.ParseInt(idParam, 10, 64)
-			if err != nil {
-				http.Error(w, "Invalid 'id' parameter", http.StatusBadRequest)
-				return
-			}
-			joke, err := getJokeById(id)
-			if err != nil {
-				http.Error(w, "Joke not found", http.StatusNotFound)
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(joke)
-		} else {
-			// Return all jokes if no ID is provided
-			jokes, err := getJokes(db)
-			if err != nil {
-				http.Error(w, "Could not retrieve jokes", http.StatusInternalServerError)
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(jokes)
-		}
-	case "POST":
-		var jok Jokes
-		if err := json.NewDecoder(r.Body).Decode(&jok); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		id, err := addJoke(jok)
+	idParam := r.URL.Query().Get("id")
+	if idParam != "" {
+		id, err := strconv.ParseInt(idParam, 10, 64)
 		if err != nil {
-			http.Error(w, "Could not add joke", http.StatusInternalServerError)
+			http.Error(w, "Invalid 'id' parameter", http.StatusBadRequest)
 			return
 		}
-		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(map[string]int64{"id": id})
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		joke, err := getJokeById(id)
+		if err != nil {
+			http.Error(w, "Joke not found", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(joke)
+	} else {
+		// Return all the jokes if no ID is provided
+		jokes, err := getJokes(db)
+		if err != nil {
+			http.Error(w, "Could not retrieve jokes", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(jokes)
 	}
 }
 
 // insultHandler handles HTTP requests for insults
 func insultHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		idParam := r.URL.Query().Get("id")
-		if idParam != "" {
-			id, err := strconv.ParseInt(idParam, 10, 64)
-			if err != nil {
-				http.Error(w, "Invalid 'id' parameter", http.StatusBadRequest)
-				return
-			}
-			insult, err := getInsultsById(id)
-			if err != nil {
-				http.Error(w, "Insult not found", http.StatusNotFound)
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(insult)
-		} else {
-			insults, err := getInsults(db)
-			if err != nil {
-				http.Error(w, "Could not retrieve insults", http.StatusInternalServerError)
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(insults)
-		}
-	case "POST":
-		var ins Insults
-		if err := json.NewDecoder(r.Body).Decode(&ins); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		id, err := addInsult(ins)
+	idParam := r.URL.Query().Get("id")
+	if idParam != "" {
+		id, err := strconv.ParseInt(idParam, 10, 64)
 		if err != nil {
-			http.Error(w, "Could not add insult", http.StatusInternalServerError)
+			http.Error(w, "Invalid 'id' parameter", http.StatusBadRequest)
 			return
 		}
-		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(map[string]int64{"id": id})
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		insult, err := getInsultsById(id)
+		if err != nil {
+			http.Error(w, "Insult not found", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(insult)
+	} else {
+		insults, err := getInsults(db)
+		if err != nil {
+			http.Error(w, "Could not retrieve insults", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(insults)
 	}
 }
 
@@ -538,6 +452,7 @@ func initDB() error {
 	log.Printf("Using SQLite database at: %s", dbPath)
 
 	// Open SQLite database
+	// Note
 	db, err = sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return fmt.Errorf("failed to open SQLite database: %v", err)
@@ -548,45 +463,10 @@ func initDB() error {
 		return fmt.Errorf("failed to ping database: %v", err)
 	}
 
-	// Create tables if they don't exist
-	if err := createTables(); err != nil {
-		return err
-	}
-
 	log.Println("Successfully connected to SQLite database")
 	return nil
 }
 
-// createTables creates the necessary tables in the database if they do not already exist
-func createTables() error {
-	// Create Jokes table
-	_, err := db.Exec(`
-	    CREATE TABLE IF NOT EXISTS Jokes (
-		    id INTEGER PRIMARY KEY AUTOINCREMENT,
-			answer TEXT NOT NULL,
-			question TEXT NOT NULL
-		)
-	`)
-	if err != nil {
-		return fmt.Errorf("failed to create Jokes table: %v", err)
-	}
-
-	// Create Insults table
-	_, err = db.Exec(`
-	    CREATE TABLE IF NOT EXISTS Insults (
-		    id INTEGER PRIMARY KEY AUTOINCREMENT,
-			insult TEXT NOT NULL
-		)
-	`)
-	if err != nil {
-		return fmt.Errorf("failed to create Insults table: %v", err)
-	}
-
-	log.Println("Database tabled created/verified")
-	return nil
-}
-
-// getUserChoice prompts the user to enter a choice and returns it as an integer
 func getUserChoice() int {
 	var choice int
 	fmt.Print("Enter your choice (1-7): ")
