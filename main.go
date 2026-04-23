@@ -453,7 +453,8 @@ func initDB() error {
 
 	// Open SQLite database
 	// Note
-	db, err = sql.Open("sqlite3", dbPath)
+	// db, err = sql.Open("sqlite3", dbPath)
+	db, err = sql.Open("sqlite3", "file:"+dbPath+"?mode=ro&cache=shared")
 	if err != nil {
 		return fmt.Errorf("failed to open SQLite database: %v", err)
 	}
