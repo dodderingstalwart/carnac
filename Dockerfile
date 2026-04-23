@@ -30,6 +30,12 @@ COPY --from=builder /app/carnac .
 # Create data directory for SQLite
 RUN mkdir -p /data
 
+# Copy carnac.db into the container
+COPY carnac.db /data/carnac.db
+
+# Database should be read-only
+RUN chmod 444 /data/carnac.db
+
 # Expose port
 EXPOSE 8080
 
