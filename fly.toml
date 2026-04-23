@@ -1,7 +1,5 @@
 # fly.toml app configuration file generated for carnac-api on 2026-04-16T01:38:03-07:00
 #
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
 
 app = 'carnac-api'
 primary_region = 'sjc'
