@@ -218,7 +218,7 @@ func listJokesHandler(w http.ResponseWriter, r *http.Request) {
 // randomJokeHandler returns a random joke from the database
 func randomJokeHandler(w http.ResponseWriter, r *http.Request) {
 	var joke Jokes
-	err := db.QueryRow("SELECT id, answer, question FROM Jokes ORDER BY RAND() LIMIT 1").Scan(&joke.ID, &joke.Answer, &joke.Question)
+	err := db.QueryRow("SELECT id, answer, question FROM Jokes ORDER BY RANDOM() LIMIT 1").Scan(&joke.ID, &joke.Answer, &joke.Question)
 
 	// Check if no jokes are found
 	if err == sql.ErrNoRows {
@@ -269,7 +269,7 @@ func listInsultsHandler(w http.ResponseWriter, r *http.Request) {
 // randomInsultsHandler returns a random insult from the database
 func randomInsultsHandler(w http.ResponseWriter, r *http.Request) {
 	var insult Insults
-	err := db.QueryRow("SELECT id, insult FROM Insults ORDER BY RAND() LIMIT 1").Scan(&insult.ID, &insult.Insult)
+	err := db.QueryRow("SELECT id, insult FROM Insults ORDER BY RANDOM() LIMIT 1").Scan(&insult.ID, &insult.Insult)
 
 	// Check if no insults are found
 	if err == sql.ErrNoRows {
