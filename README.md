@@ -12,6 +12,7 @@ An opensource Go application to input Carnac jokes and/or insults and store them
 * Git
 * SQL database like
     * Mariadb/MySQL 8.0 or higher
+    * sqlite3
  
 # Getting Started
 1. Clone the repository and change into the directory:
