@@ -136,6 +136,7 @@ func startHTTPServer(port string) {
 
 	// Enable CORS for all routes
 	lr.Use(corsMiddleware)
+	lr.Use(loggingMiddleware)
 
 	// Legacy endpoints
 	lr.HandleFunc("/joke", jokeHandler)
@@ -759,4 +760,11 @@ func exportToJSON(output string) error {
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(entries)
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("[%s] %s - From: %s", r.Method, r.RequestURI, r.Header.Get("Referer"))
+		next.ServeHTTP(w, r)
+	})
 }
