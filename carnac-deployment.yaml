@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: carnac-deployment
+  namespace: carnac
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: carnac
+  template:
+    metadata:
+      labels:
+        app: carnac
+    spec:
+      containers:
+      - name: carnac
+        image: docker.io/carllafong/carnac
+        ports:
+        - containerPort: 8080
