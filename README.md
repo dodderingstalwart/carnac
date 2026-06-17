@@ -85,7 +85,6 @@ CREATE TABLE Jokes (ID int NOT NULL AUTO_INCREMENT,
 );
 ```
 # Roadmap
-* Input the database to an LLVM in order to create modern Carnac jokes and/or insults.
-* Added it to my website for random jokes/insults.
+* Adding more random jokes/insults.
 
 ## This a fan project with no affiliation to the Johnny Carson family or Tonight Show.
