@@ -86,5 +86,6 @@ CREATE TABLE Jokes (ID int NOT NULL AUTO_INCREMENT,
 ```
 # Roadmap
 * Adding more random jokes/insults.
+* Running from homelab
 
 ## This a fan project with no affiliation to the Johnny Carson family or Tonight Show.
