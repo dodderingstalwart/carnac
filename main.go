@@ -17,7 +17,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// Insults represents an insult with an ID and the insult text
+// Insults represents an insult with an ID and the insult string
 type Insults struct {
 	ID     int64  `json:"id"`
 	Insult string `json:"insult"`
